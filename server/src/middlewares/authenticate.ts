@@ -45,7 +45,10 @@ async function resolveEmail(token: string | undefined): Promise<string> {
 export const authenticate: RequestHandler = (req, _res, next) => {
   resolveEmail(req.header('Cf-Access-Jwt-Assertion'))
     .then(async (email) => {
-      const user = await provisionUser(email, initialRoleForEmail(email, config.auth.seedAdminEmail));
+      const user = await provisionUser(
+        email,
+        initialRoleForEmail(email, config.auth.seedAdminEmail),
+      );
       req.user = { id: user.id, email: user.email, role: user.role };
       next();
     })

@@ -8,9 +8,7 @@ describe('App', () => {
   it('should_show_signed_in_user_when_me_request_succeeds', async () => {
     render(<App />);
 
-    expect(
-      await screen.findByText('viewer@dealershipaccelerator.io · viewer'),
-    ).toBeInTheDocument();
+    expect(await screen.findByText('viewer@dealershipaccelerator.io · viewer')).toBeInTheDocument();
   });
 
   it('should_show_error_when_me_request_fails', async () => {

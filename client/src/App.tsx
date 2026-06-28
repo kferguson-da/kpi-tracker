@@ -3,9 +3,7 @@ import { api, ApiError, type Me } from './utils/api';
 import './App.css';
 
 type LoadState =
-  | { status: 'loading' }
-  | { status: 'ready'; me: Me }
-  | { status: 'error'; message: string };
+  { status: 'loading' } | { status: 'ready'; me: Me } | { status: 'error'; message: string };
 
 export default function App() {
   const [state, setState] = useState<LoadState>({ status: 'loading' });
@@ -40,7 +38,9 @@ export default function App() {
 
       {state.status === 'loading' && <p>Loading…</p>}
       {state.status === 'error' && <p role="alert">{state.message}</p>}
-      {state.status === 'ready' && <p>You are signed in. The KPI dashboard arrives in the next slice.</p>}
+      {state.status === 'ready' && (
+        <p>You are signed in. The KPI dashboard arrives in the next slice.</p>
+      )}
     </main>
   );
 }
