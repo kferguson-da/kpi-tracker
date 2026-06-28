@@ -13,5 +13,13 @@ export default tseslint.config(
       sourceType: 'module',
       globals: globals.node,
     },
+    rules: {
+      // Allow intentionally-unused identifiers when prefixed with `_`
+      // (e.g. the unused `next` in Express error handlers).
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' },
+      ],
+    },
   },
 );
