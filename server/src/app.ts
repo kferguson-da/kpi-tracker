@@ -1,9 +1,10 @@
-import express from 'express';
+import express, { Router } from 'express';
+import { authenticate } from './middlewares/authenticate.js';
 import { errorHandler, notFoundHandler } from './middlewares/errorHandler.js';
+import { meRouter } from './routes/me.routes.js';
 
 // Builds the Express app without starting it, so tests can import it directly
-// (see __tests__/api). Routers and the `authenticate` guard mount here in later
-// slices; for now only the public liveness probe is wired up.
+// (see __tests__/api). Domain routers mount on the authenticated /api router.
 export function createApp() {
   const app = express();
   app.disable('x-powered-by');
@@ -13,6 +14,12 @@ export function createApp() {
   app.get('/healthz', (_req, res) => {
     res.json({ status: 'ok' });
   });
+
+  // Every /api route runs behind authenticate; new domain routers mount here.
+  const api = Router();
+  api.use(authenticate);
+  api.use('/me', meRouter);
+  app.use('/api', api);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

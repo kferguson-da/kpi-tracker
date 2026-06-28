@@ -9,7 +9,8 @@ const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
-    log: config.isProduction ? ['warn', 'error'] : ['query', 'warn', 'error'],
+    // Verbose query logging only in interactive dev; quiet in test and prod.
+    log: config.nodeEnv === 'development' ? ['query', 'warn', 'error'] : ['warn', 'error'],
   });
 
 if (!config.isProduction) {
