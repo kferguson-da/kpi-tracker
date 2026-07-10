@@ -1,4 +1,4 @@
-import type { CreateKpiInput, Kpi, Me } from './types';
+import type { CreateKpiInput, Kpi, Me, UpdateKpiInput } from './types';
 
 export class ApiError extends Error {
   constructor(
@@ -38,4 +38,6 @@ export const api = {
   listKpis: () => request<Kpi[]>('/kpis'),
   createKpi: (input: CreateKpiInput) =>
     request<Kpi>('/kpis', { method: 'POST', body: JSON.stringify(input) }),
+  updateKpi: (id: string, input: UpdateKpiInput) =>
+    request<Kpi>(`/kpis/${id}`, { method: 'PATCH', body: JSON.stringify(input) }),
 };

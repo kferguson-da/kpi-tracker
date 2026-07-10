@@ -1,5 +1,6 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import type { PrismaClient } from '@prisma/client';
+import type { AuthUser } from '../types';
 import { currentUser } from '../plugins/auth';
 import { currentKpi } from '../hooks/authz';
 import { createKpiBody, updateKpiBody } from '../schemas/kpi.schema';
@@ -10,12 +11,12 @@ import * as kpiModel from '../models/kpi.model';
 
 // Re-fetch a KPI with its recent readings and serialize it, so every response
 // reflects the current value and status.
-async function respondWithKpi(prisma: PrismaClient, id: string) {
+async function respondWithKpi(prisma: PrismaClient, id: string, viewer: AuthUser) {
   const kpi = await kpiModel.findKpiWithReadings(prisma, id);
   if (!kpi) {
     throw new HttpError(404, 'KPI not found');
   }
-  return serializeKpi(kpi);
+  return serializeKpi(kpi, viewer);
 }
 
 export async function createKpi(request: FastifyRequest, reply: FastifyReply) {
@@ -23,17 +24,17 @@ export async function createKpi(request: FastifyRequest, reply: FastifyReply) {
   const input = createKpiBody.parse(request.body);
   const kpi = await kpiModel.createKpi(request.server.prisma, user.id, input);
   reply.code(201);
-  return respondWithKpi(request.server.prisma, kpi.id);
+  return respondWithKpi(request.server.prisma, kpi.id, user);
 }
 
 export async function listKpis(request: FastifyRequest) {
   const user = currentUser(request);
   const kpis = await kpiModel.listActiveKpisForUser(request.server.prisma, user.id, user.isAdmin);
-  return kpis.map(serializeKpi);
+  return kpis.map((kpi) => serializeKpi(kpi, user));
 }
 
 export async function getKpi(request: FastifyRequest) {
-  return respondWithKpi(request.server.prisma, currentKpi(request).id);
+  return respondWithKpi(request.server.prisma, currentKpi(request).id, currentUser(request));
 }
 
 export async function updateKpi(request: FastifyRequest) {
@@ -70,7 +71,7 @@ export async function updateKpi(request: FastifyRequest) {
     goal,
     goalUpper,
   });
-  return respondWithKpi(request.server.prisma, kpi.id);
+  return respondWithKpi(request.server.prisma, kpi.id, currentUser(request));
 }
 
 export async function archiveKpi(request: FastifyRequest) {
@@ -79,7 +80,7 @@ export async function archiveKpi(request: FastifyRequest) {
     throw new HttpError(409, 'KPI is already archived');
   }
   await kpiModel.setArchived(request.server.prisma, kpi.id, new Date());
-  return respondWithKpi(request.server.prisma, kpi.id);
+  return respondWithKpi(request.server.prisma, kpi.id, currentUser(request));
 }
 
 export async function restoreKpi(request: FastifyRequest) {
@@ -88,7 +89,7 @@ export async function restoreKpi(request: FastifyRequest) {
     throw new HttpError(409, 'KPI is not archived');
   }
   await kpiModel.setArchived(request.server.prisma, kpi.id, null);
-  return respondWithKpi(request.server.prisma, kpi.id);
+  return respondWithKpi(request.server.prisma, kpi.id, currentUser(request));
 }
 
 export async function deleteKpi(request: FastifyRequest, reply: FastifyReply) {

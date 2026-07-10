@@ -34,7 +34,7 @@ export async function createReading(request: FastifyRequest) {
   if (!updated) {
     throw new HttpError(500, 'KPI not found after recording');
   }
-  return serializeKpi(updated);
+  return serializeKpi(updated, currentUser(request));
 }
 
 export async function listReadings(request: FastifyRequest) {

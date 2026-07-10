@@ -40,4 +40,15 @@ export interface Kpi {
   currentValue: number | null;
   status: KpiStatus;
   recentReadings: Reading[];
+  canEdit: boolean;
+}
+
+export interface UpdateKpiInput {
+  name?: string;
+  description?: string | null;
+  unit?: Unit;
+  comparator?: Comparator;
+  goal?: number;
+  goalUpper?: number | null;
+  cadence?: Cadence;
 }

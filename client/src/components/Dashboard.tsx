@@ -14,7 +14,7 @@ const SUMMARY: { status: KpiStatus; label: string }[] = [
 export function Dashboard() {
   const [kpis, setKpis] = useState<Kpi[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [showCreate, setShowCreate] = useState(false);
+  const [form, setForm] = useState<{ mode: 'create' } | { mode: 'edit'; kpi: Kpi } | null>(null);
 
   const load = useCallback(() => {
     setError(null);
@@ -47,7 +47,11 @@ export function Dashboard() {
             {kpis.length} {kpis.length === 1 ? 'metric' : 'metrics'} you can access
           </p>
         </div>
-        <button className="btn btn--primary" type="button" onClick={() => setShowCreate(true)}>
+        <button
+          className="btn btn--primary"
+          type="button"
+          onClick={() => setForm({ mode: 'create' })}
+        >
           New KPI
         </button>
       </div>
@@ -68,16 +72,17 @@ export function Dashboard() {
       ) : (
         <div className="grid">
           {kpis.map((k) => (
-            <KpiCard key={k.id} kpi={k} />
+            <KpiCard key={k.id} kpi={k} onEdit={(kpi) => setForm({ mode: 'edit', kpi })} />
           ))}
         </div>
       )}
 
-      {showCreate && (
+      {form && (
         <KpiFormModal
-          onClose={() => setShowCreate(false)}
+          initial={form.mode === 'edit' ? form.kpi : undefined}
+          onClose={() => setForm(null)}
           onSaved={() => {
-            setShowCreate(false);
+            setForm(null);
             load();
           }}
         />

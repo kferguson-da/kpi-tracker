@@ -3,7 +3,7 @@ import { formatValue, goalRuleText, ownerLabel } from '../lib/format';
 import { StatusBadge } from './StatusBadge';
 import { Sparkline } from './Sparkline';
 
-export function KpiCard({ kpi }: { kpi: Kpi }) {
+export function KpiCard({ kpi, onEdit }: { kpi: Kpi; onEdit?: (kpi: Kpi) => void }) {
   const latestPeriod = kpi.recentReadings.at(-1)?.periodKey;
 
   return (
@@ -35,7 +35,14 @@ export function KpiCard({ kpi }: { kpi: Kpi }) {
         <span>{latestPeriod ?? 'No readings yet'}</span>
       </div>
 
-      <div className="kpi-card__owner">Owner · {ownerLabel(kpi.owner)}</div>
+      <div className="kpi-card__owner">
+        <span>Owner · {ownerLabel(kpi.owner)}</span>
+        {kpi.canEdit && onEdit && (
+          <button className="link-btn" type="button" onClick={() => onEdit(kpi)}>
+            Edit
+          </button>
+        )}
+      </div>
     </article>
   );
 }

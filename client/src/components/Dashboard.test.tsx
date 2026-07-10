@@ -21,6 +21,7 @@ function kpi(overrides: Partial<Kpi>): Kpi {
     createdAt: '2026-06-01T00:00:00.000Z',
     currentValue: 94,
     status: 'green',
+    canEdit: true,
     recentReadings: [
       { periodKey: '2026-05', value: 90 },
       { periodKey: '2026-06', value: 94 },

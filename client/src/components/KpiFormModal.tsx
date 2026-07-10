@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { api, ApiError } from '../lib/api';
 import { goalRuleError } from '../lib/goalRule';
-import type { Cadence, Comparator, CreateKpiInput, Unit } from '../lib/types';
+import type { Cadence, Comparator, CreateKpiInput, Kpi, Unit } from '../lib/types';
 import { Modal } from './Modal';
 
 const UNITS: { value: Unit; label: string }[] = [
@@ -25,14 +25,25 @@ const CADENCES: { value: Cadence; label: string }[] = [
   { value: 'QUARTERLY', label: 'Quarterly' },
 ];
 
-export function KpiFormModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [unit, setUnit] = useState<Unit>('PERCENT');
-  const [comparator, setComparator] = useState<Comparator>('GTE');
-  const [goal, setGoal] = useState('');
-  const [goalUpper, setGoalUpper] = useState('');
-  const [cadence, setCadence] = useState<Cadence>('MONTHLY');
+export function KpiFormModal({
+  initial,
+  onClose,
+  onSaved,
+}: {
+  initial?: Kpi;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const editing = initial !== undefined;
+  const [name, setName] = useState(initial?.name ?? '');
+  const [description, setDescription] = useState(initial?.description ?? '');
+  const [unit, setUnit] = useState<Unit>(initial?.unit ?? 'PERCENT');
+  const [comparator, setComparator] = useState<Comparator>(initial?.comparator ?? 'GTE');
+  const [goal, setGoal] = useState(initial ? String(initial.goal) : '');
+  const [goalUpper, setGoalUpper] = useState(
+    initial?.goalUpper != null ? String(initial.goalUpper) : '',
+  );
+  const [cadence, setCadence] = useState<Cadence>(initial?.cadence ?? 'MONTHLY');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -50,17 +61,29 @@ export function KpiFormModal({ onClose, onSaved }: { onClose: () => void; onSave
     if (!canSubmit) return;
     setSubmitting(true);
     setError(null);
-    const input: CreateKpiInput = {
-      name: name.trim(),
-      description: description.trim() || undefined,
-      unit,
-      comparator,
-      goal: Number(goal),
-      goalUpper: isBetween && upper !== null ? upper : undefined,
-      cadence,
-    };
     try {
-      await api.createKpi(input);
+      if (initial) {
+        await api.updateKpi(initial.id, {
+          name: name.trim(),
+          description: description.trim() || null,
+          unit,
+          comparator,
+          goal: Number(goal),
+          goalUpper: isBetween && upper !== null ? upper : null,
+          cadence,
+        });
+      } else {
+        const input: CreateKpiInput = {
+          name: name.trim(),
+          description: description.trim() || undefined,
+          unit,
+          comparator,
+          goal: Number(goal),
+          goalUpper: isBetween && upper !== null ? upper : undefined,
+          cadence,
+        };
+        await api.createKpi(input);
+      }
       onSaved();
     } catch (e) {
       setError(e instanceof ApiError ? e.message : 'Failed to save the KPI.');
@@ -70,7 +93,7 @@ export function KpiFormModal({ onClose, onSaved }: { onClose: () => void; onSave
 
   return (
     <Modal
-      title="New KPI"
+      title={editing ? 'Edit KPI' : 'New KPI'}
       onClose={onClose}
       footer={
         <>
@@ -78,7 +101,7 @@ export function KpiFormModal({ onClose, onSaved }: { onClose: () => void; onSave
             Cancel
           </button>
           <button className="btn btn--primary" onClick={submit} disabled={!canSubmit} type="button">
-            Save KPI
+            {editing ? 'Save changes' : 'Save KPI'}
           </button>
         </>
       }

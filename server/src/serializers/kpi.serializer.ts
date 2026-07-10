@@ -2,9 +2,9 @@ import type { KpiWithReadings } from '../models/kpi.model';
 import { computeStatus } from '../utils/status';
 
 // The API shape of a KPI: Decimal goals as numbers, the current value and status
-// derived from the latest reading, and a bounded ascending recent series for the
-// inline sparkline.
-export function serializeKpi(kpi: KpiWithReadings) {
+// derived from the latest reading, a bounded ascending recent series for the
+// inline sparkline, and whether the caller may edit it.
+export function serializeKpi(kpi: KpiWithReadings, viewer: { id: string; isAdmin: boolean }) {
   const goal = Number(kpi.goal);
   const goalUpper = kpi.goalUpper === null ? null : Number(kpi.goalUpper);
 
@@ -31,5 +31,6 @@ export function serializeKpi(kpi: KpiWithReadings) {
     currentValue,
     status: computeStatus(kpi.comparator, goal, goalUpper, currentValue),
     recentReadings,
+    canEdit: kpi.ownerId === viewer.id || viewer.isAdmin,
   };
 }

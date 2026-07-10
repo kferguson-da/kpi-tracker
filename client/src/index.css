@@ -330,10 +330,25 @@ body {
   color: var(--text-muted);
 }
 .kpi-card__owner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   font-size: 11px;
   color: var(--text-muted);
   border-top: 1px solid var(--border);
   padding-top: 10px;
+}
+.link-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+.link-btn:hover {
+  color: var(--primary);
 }
 .cadence {
   font-size: 10px;
