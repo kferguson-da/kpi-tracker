@@ -1,6 +1,6 @@
 // Prisma schema for the KPI Tracker.
-// Phase 0 introduces only User (ownership-based auth; no global roles).
-// KPI / Reading / View / ViewKpi / ViewAccess arrive in Phase 1.
+// Ownership-based access: KPIs and Views are owned by their creator; access to a
+// View is a per-user grant (ViewAccess) that cascades read access to its KPIs.
 
 generator client {
   provider = "prisma-client-js"
@@ -11,6 +11,27 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Unit {
+  NUMBER
+  PERCENT
+  DOLLARS
+}
+
+enum Comparator {
+  EQ
+  GT
+  GTE
+  LT
+  LTE
+  BETWEEN
+}
+
+enum Cadence {
+  WEEKLY
+  MONTHLY
+  QUARTERLY
+}
+
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -18,5 +39,90 @@ model User {
   isAdmin   Boolean  @default(false)
   createdAt DateTime @default(now())
 
+  kpis          Kpi[]        @relation("KpiOwner")
+  views         View[]       @relation("ViewOwner")
+  readings      Reading[]    @relation("ReadingRecordedBy")
+  viewAccess    ViewAccess[] @relation("AccessUser")
+  grantedAccess ViewAccess[] @relation("AccessGrantedBy")
+
   @@map("users")
+}
+
+model Kpi {
+  id          String     @id @default(cuid())
+  name        String
+  description String?
+  unit        Unit
+  comparator  Comparator
+  goal        Decimal
+  goalUpper   Decimal? // required only when comparator = BETWEEN (enforced in the app)
+  cadence     Cadence
+  owner       User       @relation("KpiOwner", fields: [ownerId], references: [id])
+  ownerId     String
+  readings    Reading[]
+  views       ViewKpi[]
+  archivedAt  DateTime?
+  createdAt   DateTime   @default(now())
+
+  @@index([ownerId])
+  @@map("kpis")
+}
+
+model Reading {
+  id           String   @id @default(cuid())
+  kpi          Kpi      @relation(fields: [kpiId], references: [id], onDelete: Cascade)
+  kpiId        String
+  periodKey    String // "2026-06" | "2026-W26" | "2026-Q2", per the KPI's cadence
+  value        Decimal
+  recordedBy   User     @relation("ReadingRecordedBy", fields: [recordedById], references: [id])
+  recordedById String
+  recordedAt   DateTime @default(now())
+
+  @@unique([kpiId, periodKey]) // one value per period; re-recording upserts
+  @@index([kpiId])
+  @@map("readings")
+}
+
+model View {
+  id          String       @id @default(cuid())
+  name        String
+  description String?
+  owner       User         @relation("ViewOwner", fields: [ownerId], references: [id])
+  ownerId     String
+  kpis        ViewKpi[]
+  access      ViewAccess[]
+  archivedAt  DateTime?
+  createdAt   DateTime     @default(now())
+
+  @@index([ownerId])
+  @@map("views")
+}
+
+// Ordered many-to-many between Views and KPIs.
+model ViewKpi {
+  view     View   @relation(fields: [viewId], references: [id], onDelete: Cascade)
+  viewId   String
+  kpi      Kpi    @relation(fields: [kpiId], references: [id], onDelete: Cascade)
+  kpiId    String
+  position Int
+
+  @@id([viewId, kpiId])
+  @@index([kpiId])
+  @@map("view_kpis")
+}
+
+// A View share. Presence = Viewer (read-only); Owner is View.ownerId.
+model ViewAccess {
+  id          String   @id @default(cuid())
+  view        View     @relation(fields: [viewId], references: [id], onDelete: Cascade)
+  viewId      String
+  user        User     @relation("AccessUser", fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  grantedBy   User     @relation("AccessGrantedBy", fields: [grantedById], references: [id])
+  grantedById String
+  grantedAt   DateTime @default(now())
+
+  @@unique([viewId, userId])
+  @@index([userId])
+  @@map("view_accesses")
 }
