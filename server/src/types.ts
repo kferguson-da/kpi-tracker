@@ -1,4 +1,4 @@
-import type { PrismaClient } from '@prisma/client';
+import type { PrismaClient, Kpi } from '@prisma/client';
 
 // The authenticated user attached to every request inside the /api scope.
 export interface AuthUser {
@@ -14,5 +14,6 @@ declare module 'fastify' {
   }
   interface FastifyRequest {
     user?: AuthUser;
+    kpi?: Kpi;
   }
 }

@@ -4,6 +4,7 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: ['__tests__/**/*.test.ts'],
+    setupFiles: ['./__tests__/helpers/setupEnv.ts'],
     // API tests share a fake Prisma and must not interleave; unit tests are pure.
     // Kept single-threaded for determinism until the real test DB harness lands (Phase 3).
     pool: 'threads',

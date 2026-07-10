@@ -1,10 +1,12 @@
 import Fastify, { type FastifyError, type FastifyInstance } from 'fastify';
 import type { PrismaClient } from '@prisma/client';
+import { ZodError } from 'zod';
 import { env } from './config/env';
 import { prismaPlugin } from './plugins/prisma';
 import { authenticate, requireUser } from './plugins/auth';
 import { healthRoutes } from './routes/health.routes';
 import { meRoutes } from './routes/me.routes';
+import { kpisRoutes } from './routes/kpis.routes';
 import { HttpError } from './utils/httpError';
 import './types';
 
@@ -21,6 +23,11 @@ export async function buildApp(opts: BuildAppOptions = {}): Promise<FastifyInsta
   await app.register(prismaPlugin, { prisma: opts.prisma });
 
   app.setErrorHandler((error: FastifyError, request, reply) => {
+    if (error instanceof ZodError) {
+      reply.code(400).send({ error: { message: 'Validation failed', details: error.issues } });
+      return;
+    }
+
     const statusCode =
       error instanceof HttpError
         ? error.statusCode
@@ -49,6 +56,7 @@ export async function buildApp(opts: BuildAppOptions = {}): Promise<FastifyInsta
       instance.addHook('preHandler', authenticate);
       instance.addHook('preHandler', requireUser);
       await instance.register(meRoutes);
+      await instance.register(kpisRoutes);
     },
     { prefix: '/api' },
   );
