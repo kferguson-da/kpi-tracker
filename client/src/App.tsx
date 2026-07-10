@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { AppShell } from './components/AppShell';
+import { Dashboard } from './components/Dashboard';
 import { api, ApiError } from './lib/api';
 import type { Me } from './lib/types';
 
@@ -16,11 +17,7 @@ export default function App() {
 
   return (
     <AppShell me={me}>
-      {error ? (
-        <p className="error">Could not sign you in: {error}</p>
-      ) : (
-        <p className="muted">Dashboard coming up next.</p>
-      )}
+      {error ? <p className="error">Could not sign you in: {error}</p> : <Dashboard />}
     </AppShell>
   );
 }
