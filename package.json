@@ -1,0 +1,18 @@
+{
+  "name": "kpi-tracker",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Internal KPI tracker: CRUD KPIs, Views, and access to Views.",
+  "scripts": {
+    "dev": "npm --prefix server run dev",
+    "build": "npm --prefix server run build",
+    "test": "npm --prefix server test",
+    "lint": "npm --prefix server run lint",
+    "typecheck": "npm --prefix server run typecheck",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "prettier": "^3.4.2"
+  }
+}

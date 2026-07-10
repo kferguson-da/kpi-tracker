@@ -1,10 +1,10 @@
 # KPI Tracker — Implementation Plan
 
-|                  |                                                                                             |
-| ---------------- | ------------------------------------------------------------------------------------------- |
-| **Status**       | Draft v2                                                                                    |
-| **Owner**        | Kevin Ferguson                                                                              |
-| **Last updated** | 2026-07-09                                                                                  |
+|                  |                                                                                                        |
+| ---------------- | ------------------------------------------------------------------------------------------------------ |
+| **Status**       | Draft v2                                                                                               |
+| **Owner**        | Kevin Ferguson                                                                                         |
+| **Last updated** | 2026-07-09                                                                                             |
 | **Related**      | [prd.html](./prd.html) · [ui-design.html](./ui-design.html) · [architecture.html](./architecture.html) |
 
 ---
@@ -110,6 +110,7 @@ docs/
 ## 4. Build order (vertical slices)
 
 ### Phase 0 — Fastify foundation (server rewrite)
+
 - Restore/clean the tree. Remove Express deps; add `fastify`, `@fastify/*`, the zod type provider,
   `jose`.
 - `buildApp()` wiring: env plugin (zod), prisma plugin (decorate `app.prisma`), global
@@ -123,6 +124,7 @@ docs/
 - **Done when:** app boots on Fastify, `/api/me` green, zero Express or role references, CI green.
 
 ### Phase 1 — Data model
+
 - Prisma enums `Unit`, `Comparator`, `Cadence`; models `Kpi`, `Reading` (unique `[kpiId, periodKey]`),
   `View`, `ViewKpi` (`@@id([viewId, kpiId])`, `position`), `ViewAccess` (unique `[viewId, userId]`).
   Mirrors the ERD in the architecture doc.
@@ -130,12 +132,14 @@ docs/
 - **Done when:** migration applies clean on a fresh DB and types generate.
 
 ### Phase 2 — Status engine (pure)
+
 - `utils/status.ts`: `computeStatus(comparator, goal, goalUpper, value)` with the 10% band and the
   between logic from the doc.
 - **Tests:** exhaustive units per comparator, between bounds, band edges (green/yellow/red), no-data.
   Target ~100%.
 
 ### Phase 3 — KPIs CRUD
+
 - `models/kpi.model.ts`, `controllers/kpi.controller.ts`, `routes/kpis.routes.ts`, guard
   `requireKpiOwner`.
 - `POST /api/kpis`, `GET /api/kpis`, `GET /api/kpis/:id`, `PATCH /api/kpis/:id`,
@@ -144,12 +148,14 @@ docs/
 - **Tests:** api 2xx / 4xx / 401 / 403 / 404 per endpoint; ownership enforced.
 
 ### Phase 4 — Readings + sparkline series
+
 - `POST /api/kpis/:id/readings` (upsert by `periodKey`, backdatable), `GET .../readings`.
 - List and detail responses embed computed **status** plus a bounded recent series
   (`{ periodKey, value }`, last ~8) behind `?include=sparkline`.
 - **Tests:** upsert-same-period updates; backdate never overrides a newer period; series is bounded.
 
 ### Phase 5 — Views CRUD
+
 - Model/controller/routes + `requireViewOwner`.
 - `POST /api/views`, `GET /api/views?filter=owned|shared`, `GET /api/views/:id`,
   `PATCH /api/views/:id`, `PATCH /api/views/:id/kpis` (membership + order, guarded by
@@ -158,6 +164,7 @@ docs/
   the KPI.
 
 ### Phase 6 — View access + cascade
+
 - `hooks/authz.ts` predicates: `canAccessView`, `canManageAccess`, `canAccessKpi` (own OR in an
   accessible view), `canAddKpiToView`.
 - `GET/POST/DELETE /api/views/:id/access` (grant by email, revoke), guarded by `canManageAccess`.
@@ -165,23 +172,28 @@ docs/
   revoke removes read access reachable only through that view.
 
 ### Phase 7 — Client: KPIs
+
 - API client + shared types; Dashboard grid (status cards **with inline sparklines**); KPI detail +
   trend chart; Create/Edit KPI modal (unit selector, rule dropdown, single goal / between
   lower+upper); Record-value modal. Mirrors [ui-design.html](./ui-design.html).
 - **Tests:** component tests for status rendering + form validation hints; MSW-mocked API.
 
 ### Phase 8 — Client: Views + sharing
+
 - Views list (my / shared), View detail (roll-up + sparklines), Create/Edit View (KPI picker +
   reorder), Manage-access modal (invite by email, viewer/owner, revoke).
 
 ### Phase 9 — Archive + admin
+
 - Archived tab (KPIs + Views), restore; hard-delete surfaced admin-only.
 
 ### Phase 10 — E2E (Playwright)
+
 - P0 money path: create KPI → record values → group into a View → share it → assert a second user
   is read-only. Clean up all created data on teardown.
 
 ### Phase 11 — Infra & deploy (Terraform)
+
 - Aurora (private subnet, backups), EC2 (AL2023; systemd units for api / nginx / cloudflared), SSM
   secrets, security groups (DB reachable only from the API SG).
 - GitHub OIDC + SSM Run Command deploy: pull release, `prisma migrate deploy`, reload the api unit;
@@ -189,6 +201,7 @@ docs/
 - Cloudflare Access + Google SSO documented as a one-time manual setup.
 
 ### Phase 12 — Hardening
+
 - Real origin JWT verification against the Cloudflare Access JWKS (`jose`, checks `iss`/`aud`),
   replacing the dev bypass; fail closed.
 - Authorization audit: every route declares a guard; add a test that fails if any route is
