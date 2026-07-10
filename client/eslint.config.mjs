@@ -13,4 +13,9 @@ export default tseslint.config(
     plugins: { 'react-hooks': reactHooks },
     rules: { ...reactHooks.configs.recommended.rules },
   },
+  {
+    // e2e helpers run in Node (global setup uses child_process, path, process).
+    files: ['tests/**/*.ts'],
+    languageOptions: { globals: { ...globals.node } },
+  },
 );
