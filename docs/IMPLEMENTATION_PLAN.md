@@ -4,7 +4,7 @@
 | ---------------- | ------------------------------------------------------------------------------------------------------ |
 | **Status**       | Draft v2                                                                                               |
 | **Owner**        | Kevin Ferguson                                                                                         |
-| **Last updated** | 2026-07-09                                                                                             |
+| **Last updated** | 2026-07-10                                                                                             |
 | **Related**      | [prd.html](./prd.html) · [ui-design.html](./ui-design.html) · [architecture.html](./architecture.html) |
 
 ---
@@ -14,10 +14,13 @@
 This is the build order for the v2 KPI Tracker: CRUD **KPIs**, CRUD **Views** (grouping KPIs),
 and CRUD **access to Views**, on the stack in [architecture.html](./architecture.html).
 
-Work ships in **vertical slices**. Each slice is one reviewable chunk (aim ~100 lines), full-stack
-where it makes sense, written **test-first**, and I **stop for code review after each** before
-starting the next. Nothing is committed unless you explicitly say so, and that authorization is
-single-use (it does not carry to the next slice).
+Work ships in **vertical slices**, and this is a hard, non-negotiable rule: each slice cuts across
+**every layer the feature touches (DB → API → UI) and is exercisable end-to-end in the browser**.
+We do NOT build a whole layer first (all the API for many features, then the UI later). The only
+acceptable non-vertical steps are one-time shared foundations (app scaffold, test harness, the
+data-model migration, the pure status engine), kept minimal and folded into the first slice that
+needs them. Each slice is a reviewable chunk (aim ~100 lines), written **test-first**, and I
+**stop for code review after each**. Nothing is committed unless you explicitly say so, single-use.
 
 Every slice must leave the tree green: lint, format check, typecheck, and the unit/api/e2e suites
 that exist so far, mirroring CI. Coverage floor is 85%; the status engine and authorization
@@ -50,16 +53,14 @@ predicates approach 100%.
 
 ---
 
-## 2. Current state
+## 2. Progress
 
-Branch `first-build`. The scaffold is committed in git but **the working tree is currently wiped**
-(every source file shows as deleted; only `docs/` remains). Step one of Phase 0 is to restore or
-re-scaffold.
-
-What exists in history to reference (not reuse verbatim, since the server is being rewritten):
-monorepo layout, Prisma + `User` + init migration, an Express `authenticate` middleware with
-first-login auto-provisioning, `GET /api/me`, a Vite/React shell showing the signed-in user, and
-GitHub Actions CI.
+Branch `first-build`. Built and committed: the **shared foundations** (Fastify app + auth +
+`/api/me`; the full data-model migration; the pure status engine) and, ahead of any UI, the
+**KPI API** (CRUD + readings) and **View API** (entity CRUD). Building that much server before any
+UI was a deviation from the vertical-slice rule in §0; the slices in §4 correct course by finishing
+each feature end-to-end (UI + any remaining API + e2e). **No client exists yet**, so the next slice
+is the app shell.
 
 ---
 
@@ -107,115 +108,92 @@ docs/
 
 ---
 
-## 4. Build order (vertical slices)
+## 4. Build order — vertical slices
 
-### Phase 0 — Fastify foundation (server rewrite)
+Hard rule (see §0): each slice below is full-stack (API + UI + tests) and demoable in the browser.
+Foundations are the only non-vertical work, and they are done.
 
-- Restore/clean the tree. Remove Express deps; add `fastify`, `@fastify/*`, the zod type provider,
-  `jose`.
-- `buildApp()` wiring: env plugin (zod), prisma plugin (decorate `app.prisma`), global
-  `setErrorHandler`, `/healthz`.
-- Port `authenticate` to a Fastify **auth plugin**: dev path uses `DEV_LOGIN_EMAIL` when
-  `NODE_ENV !== production`; decorate `request.user`; keep first-login auto-provisioning.
-- Migrate `User`: drop `Role`/`role`, add `isAdmin Boolean @default(false)`; seed admin becomes
-  `isAdmin`. Delete `roles.ts`.
-- `GET /api/me` returns `{ email, name, isAdmin }`. Update CI to the new scripts.
-- **Tests:** unit (env parse, provisioning rule); api via `inject()` (`/healthz`, `/api/me` 200 + 401).
-- **Done when:** app boots on Fastify, `/api/me` green, zero Express or role references, CI green.
+### Foundations (shared, built)
 
-### Phase 1 — Data model
+- **Fastify app + auth + `/api/me`** — `buildApp`, prisma/auth plugins, the preHandler chain
+  (`authenticate` + `requireUser`), first-login provisioning, `isAdmin`.
+- **Data model + migration** — all tables/enums (Kpi, Reading, View, ViewKpi, ViewAccess).
+- **Status engine** — pure `computeStatus`, exhaustively unit-tested.
 
-- Prisma enums `Unit`, `Comparator`, `Cadence`; models `Kpi`, `Reading` (unique `[kpiId, periodKey]`),
-  `View`, `ViewKpi` (`@@id([viewId, kpiId])`, `position`), `ViewAccess` (unique `[viewId, userId]`).
-  Mirrors the ERD in the architecture doc.
-- One migration; regenerate client.
-- **Done when:** migration applies clean on a fresh DB and types generate.
+> Correction: the **KPI API** (CRUD + readings) and **View API** (entity CRUD) were also built
+> server-only (commits through 5a) before any UI. That was the layering mistake this plan now fixes.
+> The slices below pair those APIs with their UI and add the missing API where noted, each finished
+> end-to-end. From here, no server-only feature work.
 
-### Phase 2 — Status engine (pure)
+### Slice 1 — App shell + see your KPIs
 
-- `utils/status.ts`: `computeStatus(comparator, goal, goalUpper, value)` with the 10% band and the
-  between logic from the doc.
-- **Tests:** exhaustive units per comparator, between bounds, band edges (green/yellow/red), no-data.
-  Target ~100%.
+- **Client:** Vite/React shell (DAOS styling), top nav + user chip from `GET /api/me`, a typed API
+  client, and the **Dashboard** grid listing KPIs with status badge + inline **sparkline** + summary
+  counts from `GET /api/kpis`.
+- **API:** already built.
+- **Tests:** component tests (status/sparkline render, MSW-mocked); **e2e:** sign in → dashboard
+  shows seeded KPIs. Restore the client CI job.
 
-### Phase 3 — KPIs CRUD
+### Slice 2 — Create & edit a KPI
 
-- `models/kpi.model.ts`, `controllers/kpi.controller.ts`, `routes/kpis.routes.ts`, guard
-  `requireKpiOwner`.
-- `POST /api/kpis`, `GET /api/kpis`, `GET /api/kpis/:id`, `PATCH /api/kpis/:id`,
-  `POST /api/kpis/:id/archive` (+ restore), `DELETE /api/kpis/:id` (admin).
-- Validation: finite goal; `between` needs `goalUpper > goal`; non-between rejects `goalUpper`.
-- **Tests:** api 2xx / 4xx / 401 / 403 / 404 per endpoint; ownership enforced.
+- **Client:** New/Edit KPI modal (unit selector; rule dropdown; single goal, or lower + upper for
+  between) with the client goal-rule hint, wired to `POST` / `PATCH /api/kpis`.
+- **API:** already built.
+- **e2e:** create a KPI → it appears on the dashboard as `no_data`.
 
-### Phase 4 — Readings + sparkline series
+### Slice 3 — Record values & the trend
 
-- `POST /api/kpis/:id/readings` (upsert by `periodKey`, backdatable), `GET .../readings`.
-- List and detail responses embed computed **status** plus a bounded recent series
-  (`{ periodKey, value }`, last ~8) behind `?include=sparkline`.
-- **Tests:** upsert-same-period updates; backdate never overrides a newer period; series is bounded.
+- **Client:** KPI **detail** page (inline-SVG trend chart with the goal reference line + reading
+  history) and the **Record-value** modal (period + value), wired to the readings endpoints.
+- **API:** already built.
+- **e2e:** record values across periods → status + trend update; backdating an older period does not
+  change the current value.
 
-### Phase 5 — Views CRUD
+### Slice 4 — Group KPIs into Views
 
-- Model/controller/routes + `requireViewOwner`.
-- `POST /api/views`, `GET /api/views?filter=owned|shared`, `GET /api/views/:id`,
-  `PATCH /api/views/:id`, `PATCH /api/views/:id/kpis` (membership + order, guarded by
-  `canAddKpiToView`), archive/restore, `DELETE` (admin).
-- **Tests:** owner-only mutations; a KPI can join multiple views; removing from a view never deletes
-  the KPI.
+- **API (build in this slice):** `PATCH /api/views/:id/kpis` (set membership + order, guarded by
+  `canAddKpiToView`); enrich `GET /api/views/:id` to return the grouped KPIs (status + sparkline) and
+  a roll-up count.
+- **Client:** Views list (My / Shared), View **detail** (grouped cards + roll-up), Create/Edit View
+  (KPI picker + drag-reorder).
+- **e2e:** create a View, add KPIs, reorder, see grouped statuses; removing a KPI from a View does
+  not delete it.
 
-### Phase 6 — View access + cascade
+### Slice 5 — Share a View
 
-- `hooks/authz.ts` predicates: `canAccessView`, `canManageAccess`, `canAccessKpi` (own OR in an
-  accessible view), `canAddKpiToView`.
-- `GET/POST/DELETE /api/views/:id/access` (grant by email, revoke), guarded by `canManageAccess`.
-- **Tests:** granting a view cascades read to its KPIs; a viewer can read but cannot edit or record;
-  revoke removes read access reachable only through that view.
+- **API (build in this slice):** `GET/POST/DELETE /api/views/:id/access` (grant by email / revoke,
+  `canManageAccess`); widen `canAccessView` and the `canAccessKpi` cascade so a viewer sees the
+  View's KPIs read-only.
+- **Client:** Manage-access modal (invite by email, Viewer/Owner, revoke); "Shared with me"
+  populated; read-only UI for viewers (no edit / record / manage controls).
+- **e2e:** owner shares → a second user reads the View and its KPIs but cannot edit or record; revoke
+  removes access.
 
-### Phase 7 — Client: KPIs
+### Slice 6 — Archive across the app
 
-- API client + shared types; Dashboard grid (status cards **with inline sparklines**); KPI detail +
-  trend chart; Create/Edit KPI modal (unit selector, rule dropdown, single goal / between
-  lower+upper); Record-value modal. Mirrors [ui-design.html](./ui-design.html).
-- **Tests:** component tests for status rendering + form validation hints; MSW-mocked API.
+- **Client:** Archived tab (KPIs + Views) with restore; admin-only hard-delete surfaced.
+- **API:** already built (archive / restore / delete).
+- **e2e:** archiving hides from the dashboard/views and blocks edits; restore returns it intact.
 
-### Phase 8 — Client: Views + sharing
+### Slice 7 — Ship it
 
-- Views list (my / shared), View detail (roll-up + sparklines), Create/Edit View (KPI picker +
-  reorder), Manage-access modal (invite by email, viewer/owner, revoke).
-
-### Phase 9 — Archive + admin
-
-- Archived tab (KPIs + Views), restore; hard-delete surfaced admin-only.
-
-### Phase 10 — E2E (Playwright)
-
-- P0 money path: create KPI → record values → group into a View → share it → assert a second user
-  is read-only. Clean up all created data on teardown.
-
-### Phase 11 — Infra & deploy (Terraform)
-
-- Aurora (private subnet, backups), EC2 (AL2023; systemd units for api / nginx / cloudflared), SSM
-  secrets, security groups (DB reachable only from the API SG).
-- GitHub OIDC + SSM Run Command deploy: pull release, `prisma migrate deploy`, reload the api unit;
-  nginx serves the built SPA.
-- Cloudflare Access + Google SSO documented as a one-time manual setup.
-
-### Phase 12 — Hardening
-
-- Real origin JWT verification against the Cloudflare Access JWKS (`jose`, checks `iss`/`aud`),
-  replacing the dev bypass; fail closed.
-- Authorization audit: every route declares a guard; add a test that fails if any route is
-  unguarded.
-- Coverage check (85% floor), refresh `LOCAL_DEV.md`, final lint/format/typecheck pass.
+- **Infra (Terraform):** Aurora (private subnet, backups), EC2 (AL2023; systemd api / nginx /
+  cloudflared), SSM secrets, security groups. GitHub OIDC + SSM Run Command deploy
+  (`prisma migrate deploy` → reload). Cloudflare Access + Google SSO documented one-time setup.
+- **Hardening:** real origin JWT verification against the Access JWKS (`jose`, `iss`/`aud`, fail
+  closed) replacing the dev bypass; an authz-audit test that fails on any unguarded route; 85%
+  coverage gate; E2E wired into CI; refresh `LOCAL_DEV.md`.
 
 ---
 
 ## 5. Sequencing notes
 
-- Phases 0–6 are backend and unblock all UI work; 7–9 are the client; 10–12 harden and ship.
-- The status engine (Phase 2) is a dependency for Phases 3–8, so it lands early and stays pure.
-- Infra (Phase 11) can begin in parallel once the data model (Phase 1) is stable, since it does not
-  depend on feature code.
+- Foundations are done. Every remaining slice is independently demoable end-to-end; ship them in
+  order 1 → 6, then 7 to deploy.
+- Slices 1–3 are UI on top of the already-built KPI API. Slices 4–5 build their remaining API inside
+  the slice, not before it.
+- Infra (Slice 7) can start in parallel since it does not depend on feature code, but nothing ships
+  without the hardening in the same slice.
 
 ---
 
