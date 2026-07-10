@@ -1,5 +1,5 @@
 import type { Kpi } from '../lib/types';
-import { formatValue, goalRuleText } from '../lib/format';
+import { formatValue, goalRuleText, ownerLabel } from '../lib/format';
 import { StatusBadge } from './StatusBadge';
 import { Sparkline } from './Sparkline';
 
@@ -34,6 +34,8 @@ export function KpiCard({ kpi }: { kpi: Kpi }) {
         <span className="cadence">{kpi.cadence.toLowerCase()}</span>
         <span>{latestPeriod ?? 'No readings yet'}</span>
       </div>
+
+      <div className="kpi-card__owner">Owner · {ownerLabel(kpi.owner)}</div>
     </article>
   );
 }

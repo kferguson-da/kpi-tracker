@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { api, ApiError } from '../lib/api';
 import type { Kpi, KpiStatus } from '../lib/types';
 import { KpiCard } from './KpiCard';
+import { KpiFormModal } from './KpiFormModal';
 
 const SUMMARY: { status: KpiStatus; label: string }[] = [
   { status: 'green', label: 'On target' },
@@ -13,13 +14,20 @@ const SUMMARY: { status: KpiStatus; label: string }[] = [
 export function Dashboard() {
   const [kpis, setKpis] = useState<Kpi[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showCreate, setShowCreate] = useState(false);
 
-  useEffect(() => {
+  const load = useCallback(() => {
+    setError(null);
+    setKpis(null);
     api
       .listKpis()
       .then(setKpis)
       .catch((e: unknown) => setError(e instanceof ApiError ? e.message : 'Failed to load KPIs'));
   }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   if (error) {
     return <p className="error">Could not load KPIs: {error}</p>;
@@ -33,10 +41,15 @@ export function Dashboard() {
   return (
     <>
       <div className="page__head">
-        <h1 className="page__title">All KPIs</h1>
-        <p className="page__subtitle">
-          {kpis.length} {kpis.length === 1 ? 'metric' : 'metrics'} you can access
-        </p>
+        <div>
+          <h1 className="page__title">All KPIs</h1>
+          <p className="page__subtitle">
+            {kpis.length} {kpis.length === 1 ? 'metric' : 'metrics'} you can access
+          </p>
+        </div>
+        <button className="btn btn--primary" type="button" onClick={() => setShowCreate(true)}>
+          New KPI
+        </button>
       </div>
 
       <div className="summary">
@@ -58,6 +71,16 @@ export function Dashboard() {
             <KpiCard key={k.id} kpi={k} />
           ))}
         </div>
+      )}
+
+      {showCreate && (
+        <KpiFormModal
+          onClose={() => setShowCreate(false)}
+          onSaved={() => {
+            setShowCreate(false);
+            load();
+          }}
+        />
       )}
     </>
   );

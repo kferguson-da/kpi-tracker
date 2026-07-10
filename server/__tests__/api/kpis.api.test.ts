@@ -65,6 +65,7 @@ describe('KPIs API', () => {
     });
     expect(body.id).toBeDefined();
     expect(body.ownerId).toBeDefined();
+    expect(body.owner.email).toBe(OWNER);
   });
 
   it('should_return_400_when_name_is_empty', async () => {

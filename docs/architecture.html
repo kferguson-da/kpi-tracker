@@ -819,7 +819,7 @@ canAddKpiToView(u, v, k) = canEditView(u, v) && canAccessKpi(u, k)</pre>
               <tr><th style="width: 220px">Endpoint</th><th>Purpose</th><th>Guard</th></tr>
             </thead>
             <tbody>
-              <tr><td><span class="method m-get">GET</span> <span class="path">/api/kpis</span></td><td>List KPIs the user can access, each with computed status and a compact recent-readings series for the card sparkline</td><td>authenticated</td></tr>
+              <tr><td><span class="method m-get">GET</span> <span class="path">/api/kpis</span></td><td>List KPIs the user can access, each with the owner's email, computed status, and a compact recent-readings series for the card sparkline</td><td>authenticated</td></tr>
               <tr><td><span class="method m-post">POST</span> <span class="path">/api/kpis</span></td><td>Create a KPI (caller becomes owner)</td><td>authenticated</td></tr>
               <tr><td><span class="method m-get">GET</span> <span class="path">/api/kpis/:id</span></td><td>KPI detail + status + readings</td><td>canAccessKpi</td></tr>
               <tr><td><span class="method m-patch">PATCH</span> <span class="path">/api/kpis/:id</span></td><td>Edit fields / unit / goal rule / cadence</td><td>canEditKpi</td></tr>

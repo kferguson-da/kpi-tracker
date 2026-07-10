@@ -4,10 +4,14 @@ import type { CreateKpiInput } from '../schemas/kpi.schema';
 // How many recent readings to attach for the inline sparkline.
 export const RECENT_READINGS = 8;
 
-export type KpiWithReadings = Kpi & { readings: Reading[] };
+export type KpiWithReadings = Kpi & {
+  readings: Reading[];
+  owner: { email: string; name: string | null };
+};
 
-const recentReadingsInclude = {
+const kpiInclude = {
   readings: { orderBy: { periodKey: 'desc' }, take: RECENT_READINGS },
+  owner: { select: { email: true, name: true } },
 } as const;
 
 export function createKpi(
@@ -40,7 +44,7 @@ export function listActiveKpisForUser(
   return prisma.kpi.findMany({
     where: { archivedAt: null, ...(isAdmin ? {} : { ownerId: userId }) },
     orderBy: { createdAt: 'desc' },
-    include: recentReadingsInclude,
+    include: kpiInclude,
   });
 }
 
@@ -54,7 +58,7 @@ export function findKpiWithReadings(
   prisma: PrismaClient,
   id: string,
 ): Promise<KpiWithReadings | null> {
-  return prisma.kpi.findUnique({ where: { id }, include: recentReadingsInclude });
+  return prisma.kpi.findUnique({ where: { id }, include: kpiInclude });
 }
 
 export interface KpiUpdateFields {

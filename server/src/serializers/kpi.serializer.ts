@@ -25,6 +25,7 @@ export function serializeKpi(kpi: KpiWithReadings) {
     goalUpper,
     cadence: kpi.cadence,
     ownerId: kpi.ownerId,
+    owner: { email: kpi.owner.email, name: kpi.owner.name },
     archivedAt: kpi.archivedAt,
     createdAt: kpi.createdAt,
     currentValue,

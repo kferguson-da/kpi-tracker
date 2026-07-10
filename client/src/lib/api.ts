@@ -1,4 +1,4 @@
-import type { Kpi, Me } from './types';
+import type { CreateKpiInput, Kpi, Me } from './types';
 
 export class ApiError extends Error {
   constructor(
@@ -36,4 +36,6 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 export const api = {
   me: () => request<Me>('/me'),
   listKpis: () => request<Kpi[]>('/kpis'),
+  createKpi: (input: CreateKpiInput) =>
+    request<Kpi>('/kpis', { method: 'POST', body: JSON.stringify(input) }),
 };

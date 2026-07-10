@@ -16,6 +16,7 @@ function kpi(overrides: Partial<Kpi>): Kpi {
     goalUpper: null,
     cadence: 'MONTHLY',
     ownerId: 'u1',
+    owner: { email: 'owner@da.io', name: null },
     archivedAt: null,
     createdAt: '2026-06-01T00:00:00.000Z',
     currentValue: 94,
@@ -52,6 +53,8 @@ describe('Dashboard', () => {
     expect(screen.getByText('94%')).toBeInTheDocument();
     expect(screen.getByText('Goal ≥ 90%')).toBeInTheDocument();
     expect(screen.getByText('Goal ≥ 200')).toBeInTheDocument();
+    // Owner is visible on the card.
+    expect(screen.getAllByText('Owner · owner@da.io').length).toBeGreaterThan(0);
   });
 
   it('should_show_a_no_data_card_without_a_sparkline', async () => {

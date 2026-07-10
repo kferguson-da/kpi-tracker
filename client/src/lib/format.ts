@@ -27,6 +27,19 @@ export function goalRuleText(kpi: Kpi): string {
   return `Goal ${COMPARATOR_SYMBOL[kpi.comparator]} ${formatValue(kpi.unit, kpi.goal)}`;
 }
 
+const COMPANY_DOMAIN = '@dealershipaccelerator.io';
+
+// Display label for a user: their name if set, otherwise the email with the
+// company domain dropped (e.g. "kevin"). Non-company emails are shown in full.
+export function ownerLabel(owner: { email: string; name: string | null }): string {
+  if (owner.name) {
+    return owner.name;
+  }
+  return owner.email.endsWith(COMPANY_DOMAIN)
+    ? owner.email.slice(0, -COMPANY_DOMAIN.length)
+    : owner.email;
+}
+
 export const STATUS_LABEL: Record<KpiStatus, string> = {
   green: 'On target',
   yellow: 'Watch',

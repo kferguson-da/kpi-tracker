@@ -14,6 +14,16 @@ export interface Reading {
   value: number;
 }
 
+export interface CreateKpiInput {
+  name: string;
+  description?: string;
+  unit: Unit;
+  comparator: Comparator;
+  goal: number;
+  goalUpper?: number;
+  cadence: Cadence;
+}
+
 export interface Kpi {
   id: string;
   name: string;
@@ -24,6 +34,7 @@ export interface Kpi {
   goalUpper: number | null;
   cadence: Cadence;
   ownerId: string;
+  owner: { email: string; name: string | null };
   archivedAt: string | null;
   createdAt: string;
   currentValue: number | null;
