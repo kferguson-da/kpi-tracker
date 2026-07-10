@@ -1,5 +1,14 @@
-import type { Cadence, Comparator, Kpi, PrismaClient, Unit } from '@prisma/client';
+import type { Cadence, Comparator, Kpi, PrismaClient, Reading, Unit } from '@prisma/client';
 import type { CreateKpiInput } from '../schemas/kpi.schema';
+
+// How many recent readings to attach for the inline sparkline.
+export const RECENT_READINGS = 8;
+
+export type KpiWithReadings = Kpi & { readings: Reading[] };
+
+const recentReadingsInclude = {
+  readings: { orderBy: { periodKey: 'desc' }, take: RECENT_READINGS },
+} as const;
 
 export function createKpi(
   prisma: PrismaClient,
@@ -27,15 +36,25 @@ export function listActiveKpisForUser(
   prisma: PrismaClient,
   userId: string,
   isAdmin: boolean,
-): Promise<Kpi[]> {
+): Promise<KpiWithReadings[]> {
   return prisma.kpi.findMany({
     where: { archivedAt: null, ...(isAdmin ? {} : { ownerId: userId }) },
     orderBy: { createdAt: 'desc' },
+    include: recentReadingsInclude,
   });
 }
 
+// Plain lookup used by the authorization guards (no readings needed).
 export function findKpiById(prisma: PrismaClient, id: string): Promise<Kpi | null> {
   return prisma.kpi.findUnique({ where: { id } });
+}
+
+// Lookup with the recent readings attached, for serialized responses.
+export function findKpiWithReadings(
+  prisma: PrismaClient,
+  id: string,
+): Promise<KpiWithReadings | null> {
+  return prisma.kpi.findUnique({ where: { id }, include: recentReadingsInclude });
 }
 
 export interface KpiUpdateFields {
