@@ -1,0 +1,1134 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KPI Tracker: Product Requirements</title>
+    <meta
+      name="description"
+      content="PRD for the DAOS KPI Tracker: CRUD KPIs, grouping Views, and access to Views."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* ---- DAOS Design System tokens (colors_and_type.css) ---- */
+      :root {
+        --primary: #c1ff72;
+        --primary-hover: #b0f050;
+        --purple: #6329e5;
+        --success: #22c55e;
+        --warning: #f59e0b;
+        --error: #ea5a6e;
+        --bg-base: #0c0c0e;
+        --surface-1: #1c1c22;
+        --card-bg: rgba(20, 20, 26, 0.85);
+        --text-primary: #f0f0f2;
+        --text-secondary: #8a8a9a;
+        --text-muted: #55556a;
+        --border: rgba(255, 255, 255, 0.08);
+        --border-soft: rgba(255, 255, 255, 0.05);
+        --radius-sm: 8px;
+        --radius-md: 12px;
+        --radius-lg: 16px;
+        --radius-2xl: 24px;
+        --radius-full: 9999px;
+        --tracking-label: 0.08em;
+        --tracking-tight: -0.04em;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        color: var(--text-primary);
+        -webkit-font-smoothing: antialiased;
+        line-height: 1.65;
+        background:
+          radial-gradient(circle at top center, rgba(99, 41, 229, 0.18), transparent 26%),
+          radial-gradient(circle at left 20%, rgba(193, 255, 114, 0.06), transparent 24%),
+          #0c0c0e;
+        background-attachment: fixed;
+      }
+      ::selection {
+        background: var(--primary);
+        color: #0c0c0e;
+      }
+      .icon {
+        width: 16px;
+        height: 16px;
+        flex: none;
+      }
+      .icon--sm {
+        width: 13px;
+        height: 13px;
+      }
+
+      /* ---- Top bar ---- */
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        height: 56px;
+        padding: 0 24px;
+        border-bottom: 1px solid var(--border);
+        background: rgba(8, 8, 12, 0.82);
+        backdrop-filter: blur(16px);
+      }
+      .lockup {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .lockup__mark {
+        width: 24px;
+        height: 24px;
+        color: var(--primary);
+      }
+      .lockup__word {
+        font-weight: 800;
+        font-size: 17px;
+        letter-spacing: var(--tracking-tight);
+        background: linear-gradient(90deg, var(--primary) 0%, var(--purple) 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      .lockup__sub {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        color: var(--text-muted);
+        border-left: 1px solid var(--border);
+        padding-left: 10px;
+        margin-left: 2px;
+      }
+      .topbar__doc {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        color: var(--text-muted);
+      }
+
+      /* ---- Layout ---- */
+      .wrap {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 0 24px 128px;
+      }
+
+      /* ---- Hero ---- */
+      .hero {
+        padding: 72px 0 40px;
+        border-bottom: 1px solid var(--border-soft);
+      }
+      .eyebrow {
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin-bottom: 14px;
+      }
+      .hero h1 {
+        font-size: 52px;
+        font-weight: 900;
+        letter-spacing: -0.03em;
+        line-height: 1.05;
+      }
+      .hero p {
+        color: var(--text-secondary);
+        max-width: 660px;
+        margin-top: 16px;
+        font-size: 16px;
+      }
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 28px;
+      }
+      .meta__item {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+        font-size: 12px;
+        color: var(--text-secondary);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-full);
+        padding: 6px 12px;
+        background: var(--card-bg);
+      }
+      .meta__item b {
+        color: var(--text-primary);
+        font-weight: 600;
+      }
+
+      /* ---- Section ---- */
+      section.doc {
+        padding-top: 52px;
+        scroll-margin-top: 72px;
+      }
+      .kicker {
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        color: var(--text-secondary);
+        margin-bottom: 8px;
+      }
+      h2 {
+        font-size: 30px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        line-height: 1.2;
+      }
+      h3 {
+        font-size: 18px;
+        font-weight: 700;
+        margin-top: 28px;
+        margin-bottom: 4px;
+      }
+      p.lead {
+        color: var(--text-secondary);
+        margin-top: 12px;
+        font-size: 15px;
+      }
+      p {
+        color: var(--text-secondary);
+        margin-top: 12px;
+      }
+      strong {
+        color: var(--text-primary);
+        font-weight: 600;
+      }
+      ul,
+      ol {
+        color: var(--text-secondary);
+        margin-top: 12px;
+        padding-left: 22px;
+      }
+      li {
+        margin-top: 7px;
+      }
+      code {
+        font-family: 'SF Mono', ui-monospace, Menlo, monospace;
+        font-size: 0.85em;
+        color: var(--text-primary);
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--border);
+        padding: 1px 6px;
+        border-radius: 5px;
+      }
+      a {
+        color: var(--primary);
+      }
+
+      /* ---- Cards / callouts ---- */
+      .card {
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        background: var(--card-bg);
+        backdrop-filter: blur(16px);
+        padding: 22px 24px;
+        margin-top: 18px;
+      }
+      .grid2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-top: 18px;
+      }
+      .callout {
+        border-left: 3px solid var(--purple);
+        background: rgba(99, 41, 229, 0.08);
+        border-radius: var(--radius-sm);
+        padding: 14px 16px;
+        margin-top: 18px;
+        font-size: 14px;
+      }
+      .callout strong {
+        color: var(--text-primary);
+      }
+      .callout--lime {
+        border-left-color: var(--primary);
+        background: rgba(193, 255, 114, 0.06);
+      }
+
+      /* ---- Requirement rows ---- */
+      .req {
+        display: flex;
+        gap: 14px;
+        padding: 14px 0;
+        border-bottom: 1px solid var(--border-soft);
+      }
+      .req:last-child {
+        border-bottom: none;
+      }
+      .req__id {
+        font-family: 'SF Mono', ui-monospace, Menlo, monospace;
+        font-size: 11px;
+        font-weight: 700;
+        color: #0c0c0e;
+        background: var(--primary);
+        padding: 3px 8px;
+        border-radius: 6px;
+        height: fit-content;
+        white-space: nowrap;
+      }
+      .req__body {
+        font-size: 14.5px;
+        color: var(--text-secondary);
+      }
+      .req__body b {
+        color: var(--text-primary);
+        font-weight: 600;
+      }
+
+      /* ---- Tables ---- */
+      .table-wrap {
+        overflow-x: auto;
+        margin-top: 18px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13.5px;
+        min-width: 520px;
+      }
+      th {
+        text-align: left;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.02);
+      }
+      td {
+        padding: 11px 14px;
+        border-bottom: 1px solid var(--border-soft);
+        color: var(--text-secondary);
+        vertical-align: top;
+      }
+      tr:last-child td {
+        border-bottom: none;
+      }
+      td b {
+        color: var(--text-primary);
+        font-weight: 600;
+      }
+
+      /* ---- Status badges ---- */
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 3px 9px;
+        border-radius: var(--radius-full);
+        font-size: 12px;
+        font-weight: 600;
+        border: 1px solid var(--border);
+        white-space: nowrap;
+      }
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex: none;
+      }
+      .badge--green {
+        color: var(--success);
+        border-color: rgba(34, 197, 94, 0.35);
+        background: rgba(34, 197, 94, 0.08);
+      }
+      .badge--green .dot {
+        background: var(--success);
+      }
+      .badge--yellow {
+        color: var(--warning);
+        border-color: rgba(245, 158, 11, 0.35);
+        background: rgba(245, 158, 11, 0.08);
+      }
+      .badge--yellow .dot {
+        background: var(--warning);
+      }
+      .badge--red {
+        color: var(--error);
+        border-color: rgba(234, 90, 110, 0.35);
+        background: rgba(234, 90, 110, 0.08);
+      }
+      .badge--red .dot {
+        background: var(--error);
+      }
+      .badge--gray {
+        color: var(--text-secondary);
+      }
+      .badge--gray .dot {
+        background: var(--text-muted);
+      }
+
+      .pill {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-full);
+        padding: 3px 10px;
+        color: var(--text-secondary);
+      }
+      .pill--goal {
+        color: var(--primary);
+        border-color: rgba(193, 255, 114, 0.4);
+      }
+      .pill--nongoal {
+        color: var(--text-muted);
+      }
+
+      .divider {
+        height: 1px;
+        background: var(--border-soft);
+        margin: 8px 0 0;
+      }
+      .footer {
+        margin-top: 64px;
+        padding-top: 24px;
+        border-top: 1px solid var(--border-soft);
+        font-size: 12px;
+        color: var(--text-muted);
+      }
+      @media (max-width: 720px) {
+        .hero h1 {
+          font-size: 38px;
+        }
+        .grid2 {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+      <symbol id="da-mark" viewBox="0 0 96 96">
+        <path
+          fill="currentColor"
+          d="M95.36,23.12l-.26,72.32h-20.88s.23-63.83.23-63.83c.01-4.09-5.18-5.66-7.39-2.23L24.49,95.43H.36S54.82,10.91,54.82,10.91c12.14-18.83,40.62-10.26,40.54,12.21Z"
+        />
+        <path
+          fill="currentColor"
+          d="M65.45,70.04c.02-6.31-7.98-8.72-11.39-3.43l-18.58,28.83h29.88s.09-25.4.09-25.4Z"
+        />
+      </symbol>
+    </svg>
+
+    <div class="topbar">
+      <div class="lockup">
+        <svg class="lockup__mark"><use href="#da-mark" /></svg>
+        <span class="lockup__word">DAOS</span>
+        <span class="lockup__sub">KPI Tracker</span>
+      </div>
+      <span class="topbar__doc">Product Requirements</span>
+    </div>
+
+    <div class="wrap">
+      <header class="hero">
+        <div class="eyebrow">Dealership Accelerator · Internal Tool · PRD</div>
+        <h1>KPI Tracker</h1>
+        <p>
+          An internal web app where Dealership Accelerator staff track key business metrics over
+          time, group them into shareable Views, and see at a glance whether each metric is on
+          target. Whoever creates a KPI or a View owns it. Access to a View is granted per person.
+        </p>
+        <div class="meta">
+          <span class="meta__item"><b>Status</b> Draft v2</span>
+          <span class="meta__item"><b>Owner</b> Kevin Ferguson</span>
+          <span class="meta__item"><b>Updated</b> 2026-07-09</span>
+          <span class="meta__item"><b>Companion docs</b> ui-design.html · architecture.html</span>
+        </div>
+        <div class="callout" style="margin-top: 24px">
+          This revision supersedes the earlier <code>PRD.md</code>. It adds <b>Views</b> (grouping)
+          and <b>per-View access</b>, and replaces the old global viewer/editor/admin roles with an
+          <b>ownership + per-View sharing</b> model.
+        </div>
+      </header>
+
+      <!-- 1 SUMMARY -->
+      <section class="doc" id="summary">
+        <div class="kicker">01 · Summary</div>
+        <h2>What we are building</h2>
+        <p class="lead">
+          KPI Tracker replaces the ad-hoc spreadsheet the team uses to track goals. Staff define
+          KPIs with an explicit goal, record a value each reporting period, and read a green /
+          yellow / red status and a trend line instantly. KPIs are organized into <b>Views</b>,
+          named groupings a person owns and can share with specific colleagues. The app lives behind
+          Google SSO at <code>kpis.dealershipaccelerator.io</code> and is staff-only.
+        </p>
+        <p>
+          Three CRUD surfaces define the product: <b>KPIs</b>, <b>Views</b> (which group KPIs), and
+          <b>access to Views</b> (who can see a View). Ownership is the organizing principle:
+          whoever creates a KPI or a View owns it and controls it.
+        </p>
+      </section>
+
+      <!-- 2 PROBLEM -->
+      <section class="doc" id="problem">
+        <div class="kicker">02 · Problem & motivation</div>
+        <h2>Why the spreadsheet fails</h2>
+        <ul>
+          <li>
+            <b>No clear status.</b> Whether a number is "good" lives in someone's head or a manually
+            colored cell. Thresholds are inconsistent and go stale.
+          </li>
+          <li>
+            <b>No reliable history.</b> Values get overwritten; nobody can see the trend or when a
+            metric started slipping.
+          </li>
+          <li>
+            <b>No access control.</b> Anyone with the link can edit anything. There is no notion of
+            who owns a metric or who is allowed to see a given set of metrics.
+          </li>
+          <li>
+            <b>No structure.</b> Every team looks at the same flat grid. There is no way to assemble
+            "the numbers the BDC leads care about" and share just those.
+          </li>
+        </ul>
+        <p>
+          We need a lightweight, access-controlled place to set goals, log periodic values, read
+          status and trend instantly, and group metrics into Views that owners can share.
+        </p>
+      </section>
+
+      <!-- 3 GOALS -->
+      <section class="doc" id="goals">
+        <div class="kicker">03 · Goals & non-goals</div>
+        <h2>Scope</h2>
+        <div class="grid2">
+          <div class="card">
+            <h3 style="margin-top: 0">Goals (v1)</h3>
+            <ol>
+              <li>Let any staff member define KPIs with an explicit, unambiguous goal.</li>
+              <li>Record a value per reporting period (per-KPI cadence) and keep full history.</li>
+              <li>Show each KPI's status (green / yellow / red / no-data) and trend, at a glance.</li>
+              <li>Let owners group KPIs into named Views and reorder them.</li>
+              <li>Let a View owner share the View, read-only, with specific colleagues.</li>
+              <li>Be secure by default: Google SSO at the edge, staff-only, no public exposure.</li>
+            </ol>
+          </div>
+          <div class="card">
+            <h3 style="margin-top: 0">Non-goals (v1)</h3>
+            <ul>
+              <li>Automated data ingestion / integrations. Values are entered by hand.</li>
+              <li>Alerting or notifications on status change.</li>
+              <li>Configurable per-KPI tolerance. The yellow band is a fixed 10% (see §6).</li>
+              <li>An "editor" tier on a View. Sharing is binary: Viewer (read-only) or Owner.</li>
+              <li>Stale-value warnings and forecasting.</li>
+              <li>Public or customer-facing dashboards.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4 USERS & ACCESS -->
+      <section class="doc" id="access">
+        <div class="kicker">04 · Users & access model</div>
+        <h2>Ownership, not roles</h2>
+        <p class="lead">
+          Every user is a Dealership Accelerator staff member authenticated via Google SSO. There is
+          no global viewer/editor/admin hierarchy. Instead, access follows <b>ownership</b> and
+          <b>per-View sharing</b>.
+        </p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Actor</th>
+                <th>On things they own</th>
+                <th>On things shared to them</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><b>KPI owner</b><br /><span class="pill">creator</span></td>
+                <td>
+                  Full control: edit fields &amp; goal, record values, archive, delete. Add the KPI
+                  to any View they own.
+                </td>
+                <td>n/a</td>
+              </tr>
+              <tr>
+                <td><b>View owner</b><br /><span class="pill">creator</span></td>
+                <td>
+                  Full control: rename, add/remove KPIs, reorder, archive, delete. <b>Manage access</b>
+                  (grant/revoke Viewers). Can add <b>any KPI they can access</b> to the View.
+                </td>
+                <td>n/a</td>
+              </tr>
+              <tr>
+                <td><b>View viewer</b><br /><span class="pill">granted</span></td>
+                <td>n/a</td>
+                <td>
+                  Read the View and the KPIs in it: name, values, status, trend, history.
+                  <b>No edits</b>, no recording values, no access changes.
+                </td>
+              </tr>
+              <tr>
+                <td><b>App admin</b><br /><span class="pill">config</span></td>
+                <td colspan="2">
+                  Break-glass oversight: manage the admin list and hard-delete. Not part of everyday
+                  flows. Seeded from a configured admin email.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout callout--lime">
+          <strong>Access cascade.</strong> Access is controlled at the <b>View</b> level. Granting
+          someone access to a View gives them <b>read access to every KPI in that View</b>. A KPI is
+          visible to a user if they own it, or if it appears in at least one View they can access.
+          There is no separate per-KPI sharing list.
+        </div>
+        <p>
+          <b>Provisioning.</b> The first time someone signs in with a valid DA Google account they
+          are auto-created as a normal user (owner of nothing yet). The configured seed email
+          becomes an app admin.
+        </p>
+      </section>
+
+      <!-- 5 CORE CONCEPTS -->
+      <section class="doc" id="concepts">
+        <div class="kicker">05 · Core concepts</div>
+        <h2>The vocabulary</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 130px">Concept</th>
+                <th>Definition</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><b>KPI</b></td>
+                <td>
+                  A metric being tracked. Has a name, optional description, a <b>unit</b>, a
+                  <b>goal rule</b>, a <b>cadence</b> (weekly / monthly / quarterly), an owner
+                  (creator), and a history of readings.
+                </td>
+              </tr>
+              <tr>
+                <td><b>Unit</b></td>
+                <td>
+                  What the value is measured in, chosen from a fixed set: <b>number</b>,
+                  <b>percent</b>, or <b>dollars</b>. Drives how values are entered and formatted.
+                </td>
+              </tr>
+              <tr>
+                <td><b>Goal rule</b></td>
+                <td>
+                  How "on target" is defined: a <b>comparator</b> (equal to, greater than, greater
+                  than or equal to, less than, or less than or equal to) plus a single <b>goal</b>
+                  value. The <b>between</b> comparator is the exception: it takes a
+                  <b>lower value</b> and an <b>upper value</b> instead.
+                </td>
+              </tr>
+              <tr>
+                <td><b>Reading</b></td>
+                <td>
+                  A single value for one reporting <b>period</b> of a KPI (e.g. the value for
+                  "June 2026"). The <b>current value</b> is the reading for the latest period.
+                  Readings can be backdated to an earlier period; a backdated reading never overrides
+                  a more recent period.
+                </td>
+              </tr>
+              <tr>
+                <td><b>Cadence</b></td>
+                <td>
+                  How often a KPI is measured, chosen per KPI at creation: weekly, monthly, or
+                  quarterly. Determines the period key each reading is filed under and the x-axis of
+                  the trend.
+                </td>
+              </tr>
+              <tr>
+                <td><b>Status</b></td>
+                <td>
+                  Derived from the current value and the goal rule: green / yellow / red, or no-data
+                  when no reading exists. Never stored; always computed on the server (see §6).
+                </td>
+              </tr>
+              <tr>
+                <td><b>View</b></td>
+                <td>
+                  A named grouping of KPIs owned by its creator. A KPI can belong to
+                  <b>many Views</b>; a View holds <b>many KPIs</b> in an explicit order. Views are how
+                  metrics are organized and shared.
+                </td>
+              </tr>
+              <tr>
+                <td><b>View access</b></td>
+                <td>
+                  The list of people a View is shared with. Binary: a person is either the
+                  <b>Owner</b> or a <b>Viewer</b> (read-only). Owner manages this list.
+                </td>
+              </tr>
+              <tr>
+                <td><b>Archive</b></td>
+                <td>
+                  A reversible hide (soft delete) available for both KPIs and Views. Archived items
+                  drop out of the default lists and become read-only until restored.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 6 STATUS MODEL -->
+      <section class="doc" id="status">
+        <div class="kicker">06 · Status model</div>
+        <h2>The heart of the product</h2>
+        <p class="lead">
+          Each KPI declares a <b>goal rule</b>: a comparator (=, &gt;, ≥, &lt;, ≤, or between) plus a
+          goal value, where <b>between</b> takes a lower and an upper value. Status checks whether
+          the current value satisfies the rule, with a <b>fixed 10% tolerance band</b> around the
+          missed bound.
+        </p>
+        <div class="grid2">
+          <div class="card">
+            <p style="margin-top: 0">
+              <span class="badge badge--green"><span class="dot"></span> On target</span>. The value
+              satisfies the rule (for between, it is inside the lower-to-upper range).
+            </p>
+            <p>
+              <span class="badge badge--yellow"><span class="dot"></span> Watch</span>. The rule is
+              missed, but by no more than 10% of the missed bound. "Close, watch it."
+            </p>
+            <p>
+              <span class="badge badge--red"><span class="dot"></span> Off target</span>. Missed by
+              more than 10%.
+            </p>
+            <p>
+              <span class="badge badge--gray"><span class="dot"></span> No data</span>. No reading
+              recorded yet.
+            </p>
+          </div>
+          <div class="card">
+            <h3 style="margin-top: 0">Rules that make it unambiguous</h3>
+            <ul>
+              <li>Status is <b>computed on the server</b> and returned by the API; the client only renders it.</li>
+              <li>It is computed identically everywhere it appears (dashboard, View, KPI detail).</li>
+              <li>
+                <b>Never color alone.</b> Status is always paired with an icon and a text label for
+                accessibility.
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Rule</th>
+                <th>Current value</th>
+                <th>Status</th>
+                <th>Why</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>≥ 100</td>
+                <td>100</td>
+                <td><span class="badge badge--green"><span class="dot"></span> On target</span></td>
+                <td>satisfies the rule</td>
+              </tr>
+              <tr>
+                <td>≥ 100</td>
+                <td>95</td>
+                <td><span class="badge badge--yellow"><span class="dot"></span> Watch</span></td>
+                <td>5% below the 100 bound</td>
+              </tr>
+              <tr>
+                <td>≥ 100</td>
+                <td>80</td>
+                <td><span class="badge badge--red"><span class="dot"></span> Off target</span></td>
+                <td>20% below the bound</td>
+              </tr>
+              <tr>
+                <td>≤ 6</td>
+                <td>6.4</td>
+                <td><span class="badge badge--yellow"><span class="dot"></span> Watch</span></td>
+                <td>~7% over the 6 bound</td>
+              </tr>
+              <tr>
+                <td>= 50</td>
+                <td>47</td>
+                <td><span class="badge badge--yellow"><span class="dot"></span> Watch</span></td>
+                <td>6% off the target</td>
+              </tr>
+              <tr>
+                <td>between 5 and 10</td>
+                <td>7</td>
+                <td><span class="badge badge--green"><span class="dot"></span> On target</span></td>
+                <td>inside the range</td>
+              </tr>
+              <tr>
+                <td>between 5 and 10</td>
+                <td>4.7</td>
+                <td><span class="badge badge--yellow"><span class="dot"></span> Watch</span></td>
+                <td>within 10% of the 5 bound</td>
+              </tr>
+              <tr>
+                <td>between 5 and 10</td>
+                <td>12</td>
+                <td><span class="badge badge--red"><span class="dot"></span> Off target</span></td>
+                <td>20% above the 10 bound</td>
+              </tr>
+              <tr>
+                <td>any</td>
+                <td>(none)</td>
+                <td><span class="badge badge--gray"><span class="dot"></span> No data</span></td>
+                <td>no readings</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 7 FUNCTIONAL REQUIREMENTS -->
+      <section class="doc" id="fr">
+        <div class="kicker">07 · Functional requirements</div>
+        <h2>What the system must do</h2>
+
+        <h3>7.1 · Authentication & authorization</h3>
+        <div class="card">
+          <div class="req">
+            <span class="req__id">FR-1</span>
+            <div class="req__body">
+              Only authenticated DA staff (Google SSO) can reach any part of the app.
+              Unauthenticated requests are rejected at the edge and re-verified at the origin.
+            </div>
+          </div>
+          <div class="req">
+            <span class="req__id">FR-2</span>
+            <div class="req__body">
+              Every action is authorized on the server by <b>ownership</b> and <b>View access</b>.
+              The UI hides controls a user cannot use, but the server is the source of truth.
+            </div>
+          </div>
+        </div>
+
+        <h3>7.2 · KPIs (CRUD, owner-gated)</h3>
+        <div class="card">
+          <div class="req">
+            <span class="req__id">FR-3</span>
+            <div class="req__body">
+              Any user can <b>create</b> a KPI: name, optional description, a <b>unit</b> (number,
+              percent, or dollars), and a <b>goal rule</b>. The goal rule is a comparator
+              (equal to, greater than, greater than or equal to, less than, or less than or equal
+              to) plus a single goal value; <b>between</b> instead takes a lower value and an upper
+              value. Finally a <b>cadence</b> (weekly / monthly / quarterly). The creator becomes the
+              owner.
+            </div>
+          </div>
+          <div class="req">
+            <span class="req__id">FR-4</span>
+            <div class="req__body">
+              The goal rule is <b>validated</b>: every comparator needs a finite goal value;
+              <b>between</b> needs a lower value and an upper value greater than it, and shows both
+              fields; every other comparator shows only the single goal value. Invalid input is
+              rejected with a clear message and inline form feedback before submit.
+            </div>
+          </div>
+          <div class="req">
+            <span class="req__id">FR-5</span>
+            <div class="req__body">
+              The owner can <b>edit</b> a KPI's fields, unit, goal rule, and cadence, and
+              <b>archive</b> / <b>restore</b> it. Non-owners cannot edit.
+            </div>
+          </div>
+          <div class="req">
+            <span class="req__id">FR-6</span>
+            <div class="req__body">
+              The owner can <b>record a value</b> for a reporting period, defaulting to the current
+              period and backdatable to an earlier one. Recording twice for the same period updates
+              that period's value.
+            </div>
+          </div>
+          <div class="req">
+            <span class="req__id">FR-7</span>
+            <div class="req__body">
+              A KPI <b>detail</b> view shows the goal, current value &amp; status, full reading
+              history, and a <b>trend-over-time chart</b> with the goal drawn as a reference line.
+            </div>
+          </div>
+          <div class="req">
+            <span class="req__id">FR-7b</span>
+            <div class="req__body">
+              <b>Every KPI card shows its trend inline.</b> Wherever a KPI appears as a card (the
+              dashboard and inside a View), it renders a compact <b>sparkline</b> of its recent
+              readings with the goal as a faint reference line, so the direction of travel is visible
+              at a glance without opening the detail page. A KPI with no readings shows a placeholder
+              instead of a sparkline.
+            </div>
+          </div>
+        </div>
+
+        <h3>7.3 · Views (CRUD, owner-gated)</h3>
+        <div class="card">
+          <div class="req">
+            <span class="req__id">FR-8</span>
+            <div class="req__body">
+              Any user can <b>create</b> a View: name and optional description. The creator becomes
+              the owner.
+            </div>
+          </div>
+          <div class="req">
+            <span class="req__id">FR-9</span>
+            <div class="req__body">
+              The owner can <b>add / remove KPIs</b> in the View and <b>reorder</b> them. A KPI may
+              belong to many Views. Removing a KPI from a View never deletes the KPI itself.
+            </div>
+          </div>
+          <div class="req">
+            <span class="req__id">FR-10</span>
+            <div class="req__body">
+              When adding KPIs, the owner may pick <b>any KPI they can access</b>: KPIs they own,
+              plus KPIs visible through Views shared with them.
+            </div>
+          </div>
+          <div class="req">
+            <span class="req__id">FR-11</span>
+            <div class="req__body">
+              The owner can <b>rename</b>, <b>archive</b> / <b>restore</b>, and <b>delete</b> a View.
+              A "My Views" list and a "Shared with me" list separate owned from granted Views.
+            </div>
+          </div>
+          <div class="req">
+            <span class="req__id">FR-12</span>
+            <div class="req__body">
+              A <b>View detail</b> page renders the grouped KPIs as status cards in the owner's order,
+              each with its inline trend sparkline (FR-7b), plus a roll-up count of on-target / watch
+              / off-target / no-data.
+            </div>
+          </div>
+        </div>
+
+        <h3>7.4 · Access to Views (CRUD, owner-gated)</h3>
+        <div class="card">
+          <div class="req">
+            <span class="req__id">FR-13</span>
+            <div class="req__body">
+              The View owner can <b>grant</b> access to another staff member by email, as a
+              <b>Viewer</b> (read-only). Access is binary. There is no editor tier.
+            </div>
+          </div>
+          <div class="req">
+            <span class="req__id">FR-14</span>
+            <div class="req__body">
+              The owner can <b>list</b> who a View is shared with and <b>revoke</b> any grant.
+              Revoking removes that person's read access to the View and to KPIs only reachable
+              through it.
+            </div>
+          </div>
+          <div class="req">
+            <span class="req__id">FR-15</span>
+            <div class="req__body">
+              Granting View access <b>cascades read access</b> to every KPI currently in the View and
+              any added later. Only the View owner manages the access list.
+            </div>
+          </div>
+        </div>
+
+        <h3>7.5 · App administration</h3>
+        <div class="card">
+          <div class="req">
+            <span class="req__id">FR-16</span>
+            <div class="req__body">
+              An app admin can <b>permanently delete</b> a KPI or View (hard delete, irreversible) and
+              manage the admin list. Distinct from archiving.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 8 NON-FUNCTIONAL -->
+      <section class="doc" id="nfr">
+        <div class="kicker">08 · Non-functional requirements</div>
+        <h2>Quality bars</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 150px">Area</th>
+                <th>Requirement</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><b>Security</b></td>
+                <td>
+                  Google SSO via Cloudflare Access at the edge; the origin re-verifies every request
+                  (signed Access JWT) and fails closed. No public inbound exposure. No secrets in the
+                  codebase. Least-privilege credentials.
+                </td>
+              </tr>
+              <tr>
+                <td><b>Authorization</b></td>
+                <td>
+                  Ownership and View-access checks run in server middleware on every route, never
+                  only in the UI. No unguarded API routes.
+                </td>
+              </tr>
+              <tr>
+                <td><b>Reliability</b></td>
+                <td>
+                  Single API instance is acceptable for v1; the database is a managed Aurora cluster
+                  with automated backups. Status and history are never silently lost.
+                </td>
+              </tr>
+              <tr>
+                <td><b>Usability</b></td>
+                <td>
+                  Usable by non-technical staff; status legible at a glance; follows the DAOS Design
+                  System (jet-black canvas, Sea Salt text, DA Lime for emphasis only, Inter, 8pt
+                  grid).
+                </td>
+              </tr>
+              <tr>
+                <td><b>Performance</b></td>
+                <td>
+                  Interactions feel instant at our scale: tens of Views, hundreds of KPIs, dozens of
+                  users, dozens of readings each.
+                </td>
+              </tr>
+              <tr>
+                <td><b>Auditability</b></td>
+                <td>
+                  Each KPI and View records its creator; each reading records who entered it and the
+                  period it applies to; each View grant records who granted it and when.
+                </td>
+              </tr>
+              <tr>
+                <td><b>Quality</b></td>
+                <td>
+                  Behavior is covered by unit, API, and end-to-end tests; changes ship through CI
+                  (lint, typecheck, tests, build) before deploy.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 9 SUCCESS -->
+      <section class="doc" id="success">
+        <div class="kicker">09 · Success criteria</div>
+        <h2>How we know it worked</h2>
+        <ol>
+          <li>The team stops using the tracking spreadsheet and records KPIs here instead.</li>
+          <li>
+            Anyone can answer "is this metric on target, and which way is it trending?" in seconds,
+            without asking the owner.
+          </li>
+          <li>Teams assemble their own Views and share exactly the metrics a colleague should see.</li>
+          <li>No KPI value is ever silently lost or overwritten. History is complete.</li>
+          <li>Only the right people can change or see a given metric.</li>
+        </ol>
+        <p>
+          We are not instrumenting formal analytics in v1; success is judged by adoption and the
+          absence of the §2 problems.
+        </p>
+      </section>
+
+      <!-- 10 DECISIONS -->
+      <section class="doc" id="decisions">
+        <div class="kicker">10 · Resolved decisions</div>
+        <h2>Answers that shaped this spec</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Question</th>
+                <th>Decision</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>How does a KPI get its value?</td>
+                <td>Periodic manual values with full history, status vs a goal + 10% band.</td>
+              </tr>
+              <tr>
+                <td>Reporting cadence?</td>
+                <td>Per-KPI configurable: weekly, monthly, or quarterly.</td>
+              </tr>
+              <tr>
+                <td>Units?</td>
+                <td>Fixed set per KPI: number, percent, or dollars.</td>
+              </tr>
+              <tr>
+                <td>Goal rule?</td>
+                <td>
+                  A comparator (=, &gt;, ≥, &lt;, ≤, between) + a single goal value; between instead
+                  takes a lower value and an upper value.
+                </td>
+              </tr>
+              <tr>
+                <td>Status logic?</td>
+                <td>Value checked against the goal rule; fixed 10% yellow band around the missed bound.</td>
+              </tr>
+              <tr>
+                <td>View permission levels?</td>
+                <td>Binary. Viewer (read-only) or Owner. No editor tier.</td>
+              </tr>
+              <tr>
+                <td>KPI ↔ View relationship?</td>
+                <td>Many-to-many. Access granted at the View level cascades read to its KPIs.</td>
+              </tr>
+              <tr>
+                <td>Which KPIs can a View owner add?</td>
+                <td>Any KPI they can access (owned + visible via shared Views).</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 11 FUTURE -->
+      <section class="doc" id="future">
+        <div class="kicker">11 · Future considerations</div>
+        <h2>Deferred past v1</h2>
+        <ul>
+          <li>Status-change <b>alerts</b> (e.g. Slack when a KPI turns red).</li>
+          <li><b>Stale-value</b> flag when a period's reading is overdue.</li>
+          <li>An <b>editor</b> tier on Views (co-manage membership).</li>
+          <li><b>Configurable tolerance</b> per KPI instead of the fixed 10% band.</li>
+          <li>Automated <b>data ingestion</b> from source systems.</li>
+          <li>Per-reading <b>annotations</b> explaining a dip or spike.</li>
+        </ul>
+      </section>
+
+      <div class="footer">
+        Dealership Accelerator · DAOS KPI Tracker · Product Requirements v2 · 2026-07-09 · Internal
+        use only. No Lead Left Behind.
+      </div>
+    </div>
+  </body>
+</html>

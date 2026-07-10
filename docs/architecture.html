@@ -1,0 +1,941 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KPI Tracker: System Architecture</title>
+    <meta
+      name="description"
+      content="System architecture for the DAOS KPI Tracker: React + Fastify + Prisma + Aurora behind Cloudflare Access."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --primary: #c1ff72;
+        --purple: #6329e5;
+        --success: #22c55e;
+        --warning: #f59e0b;
+        --error: #ea5a6e;
+        --info: #3b82f6;
+        --bg-base: #0c0c0e;
+        --surface-1: #1c1c22;
+        --card-bg: rgba(20, 20, 26, 0.85);
+        --text-primary: #f0f0f2;
+        --text-secondary: #8a8a9a;
+        --text-muted: #55556a;
+        --border: rgba(255, 255, 255, 0.08);
+        --border-soft: rgba(255, 255, 255, 0.05);
+        --radius-sm: 8px;
+        --radius-md: 12px;
+        --radius-lg: 16px;
+        --radius-2xl: 24px;
+        --radius-full: 9999px;
+        --tracking-label: 0.08em;
+        --tracking-tight: -0.04em;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        color: var(--text-primary);
+        -webkit-font-smoothing: antialiased;
+        line-height: 1.65;
+        background:
+          radial-gradient(circle at top center, rgba(99, 41, 229, 0.18), transparent 26%),
+          radial-gradient(circle at left 20%, rgba(193, 255, 114, 0.06), transparent 24%),
+          #0c0c0e;
+        background-attachment: fixed;
+      }
+      ::selection {
+        background: var(--primary);
+        color: #0c0c0e;
+      }
+      .icon {
+        width: 16px;
+        height: 16px;
+        flex: none;
+      }
+
+      /* ---- Top bar ---- */
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        height: 56px;
+        padding: 0 24px;
+        border-bottom: 1px solid var(--border);
+        background: rgba(8, 8, 12, 0.82);
+        backdrop-filter: blur(16px);
+      }
+      .lockup {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .lockup__mark {
+        width: 24px;
+        height: 24px;
+        color: var(--primary);
+      }
+      .lockup__word {
+        font-weight: 800;
+        font-size: 17px;
+        letter-spacing: var(--tracking-tight);
+        background: linear-gradient(90deg, var(--primary) 0%, var(--purple) 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      .lockup__sub {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        color: var(--text-muted);
+        border-left: 1px solid var(--border);
+        padding-left: 10px;
+        margin-left: 2px;
+      }
+      .topbar__doc {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        color: var(--text-muted);
+      }
+
+      .wrap {
+        max-width: 920px;
+        margin: 0 auto;
+        padding: 0 24px 128px;
+      }
+      .hero {
+        padding: 72px 0 40px;
+        border-bottom: 1px solid var(--border-soft);
+      }
+      .eyebrow {
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin-bottom: 14px;
+      }
+      .hero h1 {
+        font-size: 52px;
+        font-weight: 900;
+        letter-spacing: -0.03em;
+        line-height: 1.05;
+      }
+      .hero p {
+        color: var(--text-secondary);
+        max-width: 680px;
+        margin-top: 16px;
+        font-size: 16px;
+      }
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 28px;
+      }
+      .meta__item {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+        font-size: 12px;
+        color: var(--text-secondary);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-full);
+        padding: 6px 12px;
+        background: var(--card-bg);
+      }
+      .meta__item b {
+        color: var(--text-primary);
+        font-weight: 600;
+      }
+
+      section.doc {
+        padding-top: 52px;
+        scroll-margin-top: 72px;
+      }
+      .kicker {
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        color: var(--text-secondary);
+        margin-bottom: 8px;
+      }
+      h2 {
+        font-size: 30px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        line-height: 1.2;
+      }
+      h3 {
+        font-size: 18px;
+        font-weight: 700;
+        margin-top: 28px;
+        margin-bottom: 4px;
+      }
+      p.lead {
+        color: var(--text-secondary);
+        margin-top: 12px;
+        font-size: 15px;
+      }
+      p {
+        color: var(--text-secondary);
+        margin-top: 12px;
+      }
+      strong {
+        color: var(--text-primary);
+        font-weight: 600;
+      }
+      ul,
+      ol {
+        color: var(--text-secondary);
+        margin-top: 12px;
+        padding-left: 22px;
+      }
+      li {
+        margin-top: 7px;
+      }
+      a {
+        color: var(--primary);
+      }
+      code {
+        font-family: 'SF Mono', ui-monospace, Menlo, monospace;
+        font-size: 0.85em;
+        color: var(--text-primary);
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--border);
+        padding: 1px 6px;
+        border-radius: 5px;
+      }
+
+      .card {
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        background: var(--card-bg);
+        backdrop-filter: blur(16px);
+        padding: 22px 24px;
+        margin-top: 18px;
+      }
+      .callout {
+        border-left: 3px solid var(--purple);
+        background: rgba(99, 41, 229, 0.08);
+        border-radius: var(--radius-sm);
+        padding: 14px 16px;
+        margin-top: 18px;
+        font-size: 14px;
+      }
+      .callout--lime {
+        border-left-color: var(--primary);
+        background: rgba(193, 255, 114, 0.06);
+      }
+      .callout strong {
+        color: var(--text-primary);
+      }
+
+      /* ---- Diagram shell ---- */
+      .diagram {
+        margin-top: 20px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        background: rgba(8, 8, 12, 0.5);
+        padding: 20px;
+        overflow-x: auto;
+      }
+      .diagram svg {
+        display: block;
+        width: 100%;
+        height: auto;
+        min-width: 560px;
+      }
+      .di-label {
+        font-family: 'Inter';
+        font-weight: 600;
+      }
+
+      /* ---- Code block ---- */
+      pre {
+        margin-top: 18px;
+        background: #080810;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 18px 20px;
+        overflow-x: auto;
+        font-family: 'SF Mono', ui-monospace, Menlo, monospace;
+        font-size: 12.5px;
+        line-height: 1.6;
+        color: var(--text-secondary);
+      }
+      pre .k {
+        color: var(--primary);
+      }
+      pre .t {
+        color: var(--text-primary);
+      }
+      pre .c {
+        color: var(--text-muted);
+      }
+      pre .s {
+        color: var(--text-primary);
+      }
+
+      /* ---- Tables ---- */
+      .table-wrap {
+        overflow-x: auto;
+        margin-top: 18px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13.5px;
+        min-width: 560px;
+      }
+      th {
+        text-align: left;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.02);
+      }
+      td {
+        padding: 11px 14px;
+        border-bottom: 1px solid var(--border-soft);
+        color: var(--text-secondary);
+        vertical-align: top;
+      }
+      tr:last-child td {
+        border-bottom: none;
+      }
+      td b {
+        color: var(--text-primary);
+        font-weight: 600;
+      }
+      .method {
+        font-family: 'SF Mono', ui-monospace, Menlo, monospace;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 2px 7px;
+        border-radius: 5px;
+        color: #0c0c0e;
+      }
+      .m-get {
+        background: var(--info);
+      }
+      .m-post {
+        background: var(--success);
+      }
+      .m-patch {
+        background: var(--warning);
+      }
+      .m-del {
+        background: var(--error);
+      }
+      .path {
+        font-family: 'SF Mono', ui-monospace, Menlo, monospace;
+        font-size: 12.5px;
+        color: var(--text-primary);
+      }
+
+      .grid2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-top: 18px;
+      }
+      .footer {
+        margin-top: 64px;
+        padding-top: 24px;
+        border-top: 1px solid var(--border-soft);
+        font-size: 12px;
+        color: var(--text-muted);
+      }
+      @media (max-width: 720px) {
+        .hero h1 {
+          font-size: 38px;
+        }
+        .grid2 {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+      <symbol id="da-mark" viewBox="0 0 96 96">
+        <path
+          fill="currentColor"
+          d="M95.36,23.12l-.26,72.32h-20.88s.23-63.83.23-63.83c.01-4.09-5.18-5.66-7.39-2.23L24.49,95.43H.36S54.82,10.91,54.82,10.91c12.14-18.83,40.62-10.26,40.54,12.21Z"
+        />
+        <path
+          fill="currentColor"
+          d="M65.45,70.04c.02-6.31-7.98-8.72-11.39-3.43l-18.58,28.83h29.88s.09-25.4.09-25.4Z"
+        />
+      </symbol>
+    </svg>
+
+    <div class="topbar">
+      <div class="lockup">
+        <svg class="lockup__mark"><use href="#da-mark" /></svg>
+        <span class="lockup__word">DAOS</span>
+        <span class="lockup__sub">KPI Tracker</span>
+      </div>
+      <span class="topbar__doc">System Architecture</span>
+    </div>
+
+    <div class="wrap">
+      <header class="hero">
+        <div class="eyebrow">Dealership Accelerator · Internal Tool · Architecture</div>
+        <h1>System Architecture</h1>
+        <p>
+          How the KPI Tracker is built and deployed: a React SPA and a Fastify + Prisma API on a
+          single EC2 host, backed by Aurora PostgreSQL, reachable only through Cloudflare Access with
+          Google SSO. Authorization is enforced server-side by ownership and per-View access.
+        </p>
+        <div class="meta">
+          <span class="meta__item"><b>Status</b> Draft v2</span>
+          <span class="meta__item"><b>Owner</b> Kevin Ferguson</span>
+          <span class="meta__item"><b>Updated</b> 2026-07-09</span>
+          <span class="meta__item"><b>Companion docs</b> prd.html · ui-design.html</span>
+        </div>
+      </header>
+
+      <!-- 1 OVERVIEW -->
+      <section class="doc" id="overview">
+        <div class="kicker">01 · Overview</div>
+        <h2>Topology at a glance</h2>
+        <p class="lead">
+          The browser never talks to the origin directly. Cloudflare Access authenticates the user
+          with Google SSO at the edge and forwards the request through a Cloudflare Tunnel to the EC2
+          host, attaching a signed Access JWT. The origin re-verifies that JWT and fails closed. All
+          reads and writes flow through the Fastify API, which is the only thing that touches Aurora.
+        </p>
+        <div class="diagram" role="img" aria-label="Deployment topology diagram">
+          <svg viewBox="0 0 900 300" font-family="Inter" font-size="13">
+            <defs>
+              <marker id="arw" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+                <path d="M0,0 L7,3 L0,6 Z" fill="#8a8a9a" />
+              </marker>
+            </defs>
+            <!-- Browser -->
+            <rect x="20" y="110" width="140" height="80" rx="14" fill="rgba(193,255,114,0.06)" stroke="#c1ff72" stroke-width="1.2" />
+            <text x="90" y="145" fill="#f0f0f2" text-anchor="middle" class="di-label">Browser</text>
+            <text x="90" y="165" fill="#8a8a9a" text-anchor="middle" font-size="11">React SPA</text>
+
+            <!-- Cloudflare -->
+            <rect x="215" y="80" width="170" height="140" rx="14" fill="rgba(99,41,229,0.1)" stroke="#6329e5" stroke-width="1.2" />
+            <text x="300" y="112" fill="#f0f0f2" text-anchor="middle" class="di-label">Cloudflare</text>
+            <text x="300" y="134" fill="#8a8a9a" text-anchor="middle" font-size="11">Access + Google SSO</text>
+            <text x="300" y="152" fill="#8a8a9a" text-anchor="middle" font-size="11">issues Access JWT</text>
+            <text x="300" y="176" fill="#8a8a9a" text-anchor="middle" font-size="11">Tunnel (no open</text>
+            <text x="300" y="192" fill="#8a8a9a" text-anchor="middle" font-size="11">inbound ports)</text>
+
+            <!-- EC2 -->
+            <rect x="440" y="55" width="230" height="190" rx="14" fill="rgba(255,255,255,0.03)" stroke="#8a8a9a" stroke-width="1.2" />
+            <text x="555" y="82" fill="#8a8a9a" text-anchor="middle" font-size="11">EC2 · Amazon Linux 2023</text>
+            <rect x="460" y="95" width="190" height="42" rx="9" fill="rgba(255,255,255,0.04)" stroke="var(--border)" stroke-width="1" />
+            <text x="555" y="121" fill="#f0f0f2" text-anchor="middle" font-size="12">nginx + cloudflared</text>
+            <rect x="460" y="146" width="190" height="42" rx="9" fill="rgba(193,255,114,0.06)" stroke="#c1ff72" stroke-width="1" />
+            <text x="555" y="166" fill="#f0f0f2" text-anchor="middle" font-size="12">Fastify API (systemd)</text>
+            <text x="555" y="181" fill="#8a8a9a" text-anchor="middle" font-size="10.5">JWT verify · Prisma</text>
+            <rect x="460" y="197" width="190" height="36" rx="9" fill="rgba(255,255,255,0.03)" stroke="var(--border)" stroke-width="1" />
+            <text x="555" y="220" fill="#8a8a9a" text-anchor="middle" font-size="11">serves built SPA assets</text>
+
+            <!-- Aurora -->
+            <rect x="720" y="110" width="150" height="80" rx="14" fill="rgba(59,130,246,0.08)" stroke="#3b82f6" stroke-width="1.2" />
+            <text x="795" y="145" fill="#f0f0f2" text-anchor="middle" class="di-label">Aurora</text>
+            <text x="795" y="165" fill="#8a8a9a" text-anchor="middle" font-size="11">PostgreSQL</text>
+
+            <!-- arrows -->
+            <line x1="160" y1="150" x2="212" y2="150" stroke="#8a8a9a" stroke-width="1.5" marker-end="url(#arw)" />
+            <line x1="385" y1="150" x2="437" y2="150" stroke="#8a8a9a" stroke-width="1.5" marker-end="url(#arw)" />
+            <line x1="670" y1="150" x2="717" y2="150" stroke="#8a8a9a" stroke-width="1.5" marker-end="url(#arw)" />
+            <text x="405" y="142" fill="#55556a" text-anchor="middle" font-size="10">+JWT</text>
+            <text x="693" y="142" fill="#55556a" text-anchor="middle" font-size="10">TLS · SG</text>
+          </svg>
+        </div>
+      </section>
+
+      <!-- 2 STACK -->
+      <section class="doc" id="stack">
+        <div class="kicker">02 · Technology stack</div>
+        <h2>What each layer runs on</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 150px">Layer</th>
+                <th>Choice</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><b>Frontend</b></td>
+                <td>React + TypeScript (Vite)</td>
+                <td>SPA. No SSR needed for an internal tool. Trend chart is inline SVG, no chart library.</td>
+              </tr>
+              <tr>
+                <td><b>Backend</b></td>
+                <td>Node.js + Fastify + TypeScript</td>
+                <td>REST API. Schema-validated routes; auth + authorization in plugins/hooks.</td>
+              </tr>
+              <tr>
+                <td><b>ORM</b></td>
+                <td>Prisma</td>
+                <td>Type-safe client; migrations in <code>prisma/migrations</code>. No raw SQL outside migrations.</td>
+              </tr>
+              <tr>
+                <td><b>Database</b></td>
+                <td>Amazon Aurora (PostgreSQL)</td>
+                <td>Managed cluster, automated backups, private subnet, reachable only from the API security group.</td>
+              </tr>
+              <tr>
+                <td><b>Auth</b></td>
+                <td>Cloudflare Access · Google SSO</td>
+                <td>Identity at the edge; the origin verifies the signed Access JWT against the team JWKS.</td>
+              </tr>
+              <tr>
+                <td><b>Edge / ingress</b></td>
+                <td>Cloudflare Tunnel + nginx</td>
+                <td><code>cloudflared</code> holds an outbound tunnel; no public inbound ports on EC2.</td>
+              </tr>
+              <tr>
+                <td><b>CI/CD</b></td>
+                <td>GitHub Actions</td>
+                <td>Lint, typecheck, test, build on PR; deploy via GitHub OIDC + SSM Run Command.</td>
+              </tr>
+              <tr>
+                <td><b>IaC</b></td>
+                <td>Terraform</td>
+                <td>VPC, Aurora, EC2, IAM, security groups in <code>infra/</code>. Cloudflare Access is a one-time manual setup.</td>
+              </tr>
+              <tr>
+                <td><b>Secrets</b></td>
+                <td>AWS SSM Parameter Store</td>
+                <td>DB URL, Access team domain/aud. Pulled at deploy; never committed.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 3 AUTH FLOW -->
+      <section class="doc" id="auth">
+        <div class="kicker">03 · Authentication flow</div>
+        <h2>Edge auth, origin verification</h2>
+        <ol>
+          <li>User hits <code>kpis.dealershipaccelerator.io</code>. Cloudflare Access intercepts and requires a Google SSO login scoped to the DA org.</li>
+          <li>On success, Cloudflare forwards the request through the tunnel with a signed <code>Cf-Access-Jwt-Assertion</code> header.</li>
+          <li>A Fastify <code>preHandler</code> hook verifies the JWT against the Access team JWKS (checks signature, <code>iss</code>, and <code>aud</code>). On failure it returns 401. <b>Fail closed.</b></li>
+          <li>The verified email is resolved to a <code>User</code> row (auto-provisioned on first sight; seed email flagged <code>is_admin</code>). The user is attached to the request as <code>req.user</code>.</li>
+          <li>Route-level authorization hooks then enforce ownership / View-access before the controller runs.</li>
+        </ol>
+        <div class="callout">
+          <strong>Local dev bypass.</strong> When <code>NODE_ENV !== 'production'</code>, a
+          <code>DEV_LOGIN_EMAIL</code> env var stands in for the Access JWT so the app runs without
+          Cloudflare in front. The bypass is impossible in production because the check is gated on
+          <code>NODE_ENV</code>.
+        </div>
+      </section>
+
+      <!-- 4 COMPONENTS -->
+      <section class="doc" id="components">
+        <div class="kicker">04 · Component architecture</div>
+        <h2>Inside the codebase</h2>
+        <div class="grid2">
+          <div class="card">
+            <h3 style="margin-top: 0">Server · Routes → Controllers → Models</h3>
+            <ul>
+              <li><b>Routes</b> · HTTP plumbing + schema validation only. Every route declares an auth hook.</li>
+              <li><b>Controllers</b> · business logic and authorization decisions. Never import Prisma directly.</li>
+              <li><b>Models</b> · thin Prisma data-access layer; the only place <code>PrismaClient</code> is used.</li>
+              <li><b>utils/status.ts</b> · server-only status computation, unit-tested.</li>
+              <li><b>middlewares</b> · <code>authenticate</code>, <code>requireKpiOwner</code>, <code>requireViewOwner</code>, <code>requireViewAccess</code>.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3 style="margin-top: 0">Client · pages by domain, flat components</h3>
+            <ul>
+              <li><b>pages/</b> grouped by domain: <code>Dashboard</code>, <code>Kpi</code>, <code>Views</code>, <code>Archived</code>.</li>
+              <li><b>components/</b> flat, each co-located with its <code>.css</code> and <code>.test.tsx</code>.</li>
+              <li><b>utils/api.ts</b> · the single API client boundary.</li>
+              <li>Renders status returned by the API; never recomputes it. A thin goal-rule validator gives inline form hints only.</li>
+            </ul>
+          </div>
+        </div>
+        <p>
+          Monorepo layout: sibling <code>server/</code> and <code>client/</code> (each with its own
+          <code>package.json</code>), plus <code>infra/</code> (Terraform) and <code>docs/</code>.
+          The root runs both in dev via <code>concurrently</code>.
+        </p>
+      </section>
+
+      <!-- 5 DATA MODEL -->
+      <section class="doc" id="data">
+        <div class="kicker">05 · Data model</div>
+        <h2>Entities & relationships</h2>
+        <p class="lead">
+          Six tables. <code>ViewKpi</code> is the many-to-many join between Views and KPIs (with an
+          explicit ordering); <code>ViewAccess</code> is the per-View share list. Ownership lives on
+          <code>Kpi.ownerId</code> and <code>View.ownerId</code>.
+        </p>
+        <div class="diagram" role="img" aria-label="Entity relationship diagram">
+          <svg viewBox="0 0 900 380" font-family="Inter" font-size="12">
+            <defs>
+              <marker id="rel" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+                <path d="M0,0 L6,3 L0,6 Z" fill="#55556a" />
+              </marker>
+            </defs>
+            <!-- User -->
+            <g>
+              <rect x="360" y="20" width="180" height="86" rx="10" fill="rgba(99,41,229,0.1)" stroke="#6329e5" stroke-width="1.2" />
+              <text x="374" y="42" fill="#f0f0f2" font-weight="700">User</text>
+              <text x="374" y="62" fill="#8a8a9a">id · email (unique)</text>
+              <text x="374" y="79" fill="#8a8a9a">name · isAdmin</text>
+              <text x="374" y="96" fill="#8a8a9a">createdAt</text>
+            </g>
+            <!-- Kpi -->
+            <g>
+              <rect x="40" y="160" width="200" height="120" rx="10" fill="rgba(193,255,114,0.06)" stroke="#c1ff72" stroke-width="1.2" />
+              <text x="54" y="182" fill="#f0f0f2" font-weight="700">Kpi</text>
+              <text x="54" y="202" fill="#8a8a9a">id · name · unit</text>
+              <text x="54" y="219" fill="#8a8a9a">comparator · goal</text>
+              <text x="54" y="236" fill="#8a8a9a">goalUpper · cadence</text>
+              <text x="54" y="253" fill="#8a8a9a">ownerId → User</text>
+              <text x="54" y="270" fill="#8a8a9a">archivedAt</text>
+            </g>
+            <!-- Reading -->
+            <g>
+              <rect x="40" y="310" width="200" height="56" rx="10" fill="rgba(255,255,255,0.03)" stroke="#8a8a9a" stroke-width="1.1" />
+              <text x="54" y="332" fill="#f0f0f2" font-weight="700">Reading</text>
+              <text x="54" y="352" fill="#8a8a9a">kpiId · periodKey · value</text>
+            </g>
+            <!-- View -->
+            <g>
+              <rect x="660" y="160" width="200" height="104" rx="10" fill="rgba(193,255,114,0.06)" stroke="#c1ff72" stroke-width="1.2" />
+              <text x="674" y="182" fill="#f0f0f2" font-weight="700">View</text>
+              <text x="674" y="202" fill="#8a8a9a">id · name</text>
+              <text x="674" y="219" fill="#8a8a9a">description</text>
+              <text x="674" y="236" fill="#8a8a9a">ownerId → User</text>
+              <text x="674" y="253" fill="#8a8a9a">archivedAt</text>
+            </g>
+            <!-- ViewKpi -->
+            <g>
+              <rect x="370" y="180" width="160" height="60" rx="10" fill="rgba(255,255,255,0.03)" stroke="#8a8a9a" stroke-width="1.1" />
+              <text x="384" y="202" fill="#f0f0f2" font-weight="700">ViewKpi</text>
+              <text x="384" y="222" fill="#8a8a9a">viewId · kpiId</text>
+              <text x="384" y="236" fill="#55556a" font-size="11">position</text>
+            </g>
+            <!-- ViewAccess -->
+            <g>
+              <rect x="660" y="300" width="200" height="60" rx="10" fill="rgba(255,255,255,0.03)" stroke="#8a8a9a" stroke-width="1.1" />
+              <text x="674" y="322" fill="#f0f0f2" font-weight="700">ViewAccess</text>
+              <text x="674" y="342" fill="#8a8a9a">viewId · userId · grantedBy</text>
+            </g>
+
+            <!-- relationships -->
+            <!-- User owns Kpi -->
+            <path d="M360,80 C240,90 150,120 140,158" fill="none" stroke="#55556a" stroke-width="1.3" marker-end="url(#rel)" />
+            <text x="205" y="120" fill="#55556a" font-size="10.5">owns 1..*</text>
+            <!-- User owns View -->
+            <path d="M540,80 C660,90 750,120 760,158" fill="none" stroke="#55556a" stroke-width="1.3" marker-end="url(#rel)" />
+            <text x="690" y="120" fill="#55556a" font-size="10.5">owns 1..*</text>
+            <!-- Kpi has readings -->
+            <path d="M140,280 L140,308" fill="none" stroke="#55556a" stroke-width="1.3" marker-end="url(#rel)" />
+            <text x="150" y="298" fill="#55556a" font-size="10.5">1..*</text>
+            <!-- Kpi - ViewKpi -->
+            <path d="M240,215 L368,213" fill="none" stroke="#55556a" stroke-width="1.3" marker-end="url(#rel)" />
+            <!-- View - ViewKpi -->
+            <path d="M660,213 L532,211" fill="none" stroke="#55556a" stroke-width="1.3" marker-end="url(#rel)" />
+            <text x="450" y="176" fill="#55556a" font-size="10.5">many-to-many</text>
+            <!-- View - ViewAccess -->
+            <path d="M760,264 L760,298" fill="none" stroke="#55556a" stroke-width="1.3" marker-end="url(#rel)" />
+            <text x="770" y="286" fill="#55556a" font-size="10.5">0..*</text>
+            <!-- User - ViewAccess -->
+            <path d="M540,96 C600,200 640,300 658,326" fill="none" stroke="#55556a" stroke-width="1.1" stroke-dasharray="4 4" marker-end="url(#rel)" />
+            <text x="600" y="250" fill="#55556a" font-size="10.5">granted to</text>
+          </svg>
+        </div>
+
+        <h3>Prisma schema (core)</h3>
+        <pre><span class="k">enum</span> Unit       { NUMBER  PERCENT  DOLLARS }
+<span class="k">enum</span> Comparator { EQ  GT  GTE  LT  LTE  BETWEEN }
+<span class="k">enum</span> Cadence    { WEEKLY  MONTHLY  QUARTERLY }
+
+<span class="k">model</span> <span class="t">Kpi</span> {
+  id          <span class="t">String</span>    @id @default(cuid())
+  name        <span class="t">String</span>
+  description <span class="t">String?</span>
+  unit        <span class="t">Unit</span>
+  comparator  <span class="t">Comparator</span>
+  goal        <span class="t">Decimal</span>    <span class="c">// single goal, or the lower value when BETWEEN</span>
+  goalUpper   <span class="t">Decimal?</span>   <span class="c">// the upper value; required only when comparator = BETWEEN</span>
+  cadence     <span class="t">Cadence</span>
+  owner       <span class="t">User</span>      @relation(fields: [ownerId], references: [id])
+  ownerId     <span class="t">String</span>
+  readings    <span class="t">Reading[]</span>
+  views       <span class="t">ViewKpi[]</span>
+  archivedAt  <span class="t">DateTime?</span>
+  createdAt   <span class="t">DateTime</span>  @default(now())
+}
+
+<span class="k">model</span> <span class="t">Reading</span> {
+  id           <span class="t">String</span>   @id @default(cuid())
+  kpi          <span class="t">Kpi</span>      @relation(fields: [kpiId], references: [id], onDelete: Cascade)
+  kpiId        <span class="t">String</span>
+  periodKey    <span class="t">String</span>   <span class="c">// "2026-06" | "2026-W26" | "2026-Q2"</span>
+  value        <span class="t">Decimal</span>
+  recordedBy   <span class="t">User</span>     @relation(fields: [recordedById], references: [id])
+  recordedById <span class="t">String</span>
+  recordedAt   <span class="t">DateTime</span> @default(now())
+  @@unique([kpiId, periodKey])   <span class="c">// one value per period; re-record = upsert</span>
+}
+
+<span class="k">model</span> <span class="t">View</span> {
+  id          <span class="t">String</span>   @id @default(cuid())
+  name        <span class="t">String</span>
+  description <span class="t">String?</span>
+  owner       <span class="t">User</span>     @relation(fields: [ownerId], references: [id])
+  ownerId     <span class="t">String</span>
+  kpis        <span class="t">ViewKpi[]</span>
+  access      <span class="t">ViewAccess[]</span>
+  archivedAt  <span class="t">DateTime?</span>
+  createdAt   <span class="t">DateTime</span> @default(now())
+}
+
+<span class="k">model</span> <span class="t">ViewKpi</span> {   <span class="c">// many-to-many join, ordered</span>
+  view     <span class="t">View</span>   @relation(fields: [viewId], references: [id], onDelete: Cascade)
+  viewId   <span class="t">String</span>
+  kpi      <span class="t">Kpi</span>    @relation(fields: [kpiId], references: [id], onDelete: Cascade)
+  kpiId    <span class="t">String</span>
+  position <span class="t">Int</span>
+  @@id([viewId, kpiId])
+}
+
+<span class="k">model</span> <span class="t">ViewAccess</span> {   <span class="c">// presence = Viewer; Owner is View.ownerId</span>
+  id          <span class="t">String</span>   @id @default(cuid())
+  view        <span class="t">View</span>     @relation(fields: [viewId], references: [id], onDelete: Cascade)
+  viewId      <span class="t">String</span>
+  user        <span class="t">User</span>     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      <span class="t">String</span>
+  grantedById <span class="t">String</span>
+  grantedAt   <span class="t">DateTime</span> @default(now())
+  @@unique([viewId, userId])
+}</pre>
+      </section>
+
+      <!-- 6 AUTHORIZATION -->
+      <section class="doc" id="authz">
+        <div class="kicker">06 · Authorization model</div>
+        <h2>Who can do what, resolved server-side</h2>
+        <p class="lead">
+          There are no global roles. Every decision reduces to ownership or membership in a View's
+          access list. App admins are a break-glass exception. These predicates run in middleware,
+          never inline in controllers.
+        </p>
+        <pre><span class="c">// server/src/utils/authz.ts</span>
+canAccessView(u, v)  = v.ownerId === u.id || hasGrant(v, u) || u.isAdmin
+canEditView(u, v)    = v.ownerId === u.id || u.isAdmin        <span class="c">// rename, membership, archive</span>
+canManageAccess(u,v) = v.ownerId === u.id || u.isAdmin        <span class="c">// grant / revoke viewers</span>
+
+canAccessKpi(u, k)   = k.ownerId === u.id || u.isAdmin
+                       || existsView v: canAccessView(u, v) && kpiInView(k, v)   <span class="c">// cascade</span>
+canEditKpi(u, k)     = k.ownerId === u.id || u.isAdmin        <span class="c">// edit, record value, archive</span>
+
+<span class="c">// adding a KPI to a view: owner must be able to edit the view AND access the KPI</span>
+canAddKpiToView(u, v, k) = canEditView(u, v) && canAccessKpi(u, k)</pre>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Action</th>
+                <th>KPI owner</th>
+                <th>View owner</th>
+                <th>View viewer</th>
+                <th>App admin</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>See a KPI</td><td>Yes (own)</td><td>if in an accessible view</td><td>if in the shared view</td><td>Yes (all)</td></tr>
+              <tr><td>Edit KPI / record value</td><td>Yes (own)</td><td>No</td><td>No</td><td>Yes</td></tr>
+              <tr><td>See a View</td><td>n/a</td><td>Yes (own)</td><td>Yes (granted)</td><td>Yes</td></tr>
+              <tr><td>Edit View / membership</td><td>n/a</td><td>Yes (own)</td><td>No</td><td>Yes</td></tr>
+              <tr><td>Grant / revoke access</td><td>n/a</td><td>Yes (own)</td><td>No</td><td>Yes</td></tr>
+              <tr><td>Hard delete</td><td>No</td><td>No</td><td>No</td><td>Yes</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout callout--lime">
+          <strong>Access cascade.</strong> A viewer of a View can read every KPI in it, even KPIs
+          owned by someone else, but can never edit them or record values. Revoking the grant removes
+          read access to KPIs only reachable through that View.
+        </div>
+      </section>
+
+      <!-- 7 API -->
+      <section class="doc" id="api">
+        <div class="kicker">07 · API surface</div>
+        <h2>REST endpoints</h2>
+        <p class="lead">
+          All routes require a verified user. The <b>Guard</b> column names the authorization hook.
+          Bodies and params are schema-validated at the route.
+        </p>
+        <div class="callout">
+          <strong>Sparkline payloads.</strong> List responses embed a <b>bounded recent-readings
+          series</b> per KPI (e.g. the last 8 periods: <code>{ periodKey, value }</code>) so cards
+          can draw an inline trend without an extra request per card. Full history stays on the KPI
+          detail endpoint. At our scale (hundreds of KPIs) the trimmed series keeps list payloads
+          small; if a list ever grows large, the series can move behind an
+          <code>?include=sparkline</code> flag.
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th style="width: 220px">Endpoint</th><th>Purpose</th><th>Guard</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><span class="method m-get">GET</span> <span class="path">/api/kpis</span></td><td>List KPIs the user can access, each with computed status and a compact recent-readings series for the card sparkline</td><td>authenticated</td></tr>
+              <tr><td><span class="method m-post">POST</span> <span class="path">/api/kpis</span></td><td>Create a KPI (caller becomes owner)</td><td>authenticated</td></tr>
+              <tr><td><span class="method m-get">GET</span> <span class="path">/api/kpis/:id</span></td><td>KPI detail + status + readings</td><td>canAccessKpi</td></tr>
+              <tr><td><span class="method m-patch">PATCH</span> <span class="path">/api/kpis/:id</span></td><td>Edit fields / unit / goal rule / cadence</td><td>canEditKpi</td></tr>
+              <tr><td><span class="method m-post">POST</span> <span class="path">/api/kpis/:id/readings</span></td><td>Upsert a value for a period</td><td>canEditKpi</td></tr>
+              <tr><td><span class="method m-post">POST</span> <span class="path">/api/kpis/:id/archive</span></td><td>Archive / restore</td><td>canEditKpi</td></tr>
+              <tr><td><span class="method m-del">DEL</span> <span class="path">/api/kpis/:id</span></td><td>Hard delete</td><td>isAdmin</td></tr>
+              <tr><td><span class="method m-get">GET</span> <span class="path">/api/views</span></td><td>List owned + shared views (<code>?filter</code>)</td><td>authenticated</td></tr>
+              <tr><td><span class="method m-post">POST</span> <span class="path">/api/views</span></td><td>Create a View (caller becomes owner)</td><td>authenticated</td></tr>
+              <tr><td><span class="method m-get">GET</span> <span class="path">/api/views/:id</span></td><td>View detail + grouped KPIs (each with status + sparkline series) + roll-up</td><td>canAccessView</td></tr>
+              <tr><td><span class="method m-patch">PATCH</span> <span class="path">/api/views/:id</span></td><td>Rename / describe / archive</td><td>canEditView</td></tr>
+              <tr><td><span class="method m-patch">PATCH</span> <span class="path">/api/views/:id/kpis</span></td><td>Set membership + order</td><td>canEditView + canAccessKpi</td></tr>
+              <tr><td><span class="method m-get">GET</span> <span class="path">/api/views/:id/access</span></td><td>List who the View is shared with</td><td>canManageAccess</td></tr>
+              <tr><td><span class="method m-post">POST</span> <span class="path">/api/views/:id/access</span></td><td>Grant a Viewer by email</td><td>canManageAccess</td></tr>
+              <tr><td><span class="method m-del">DEL</span> <span class="path">/api/views/:id/access/:userId</span></td><td>Revoke a Viewer</td><td>canManageAccess</td></tr>
+              <tr><td><span class="method m-del">DEL</span> <span class="path">/api/views/:id</span></td><td>Hard delete</td><td>isAdmin</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 8 STATUS -->
+      <section class="doc" id="status">
+        <div class="kicker">08 · Status computation</div>
+        <h2>Server-only, one implementation</h2>
+        <p class="lead">
+          Status is derived from the latest reading and the KPI's goal rule (comparator + goal, plus
+          goalUpper for between), with a fixed 10% band around the missed bound. It is computed once,
+          on the server, and returned by every KPI-bearing endpoint. The client never recomputes it.
+        </p>
+        <pre><span class="k">type</span> <span class="t">Status</span> = <span class="s">'green'</span> | <span class="s">'yellow'</span> | <span class="s">'red'</span> | <span class="s">'no_data'</span>;
+<span class="k">const</span> BAND = 0.10;
+
+<span class="k">function</span> <span class="t">computeStatus</span>(comparator, goal, goalUpper, value): Status {
+  <span class="k">if</span> (value == null) <span class="k">return</span> <span class="s">'no_data'</span>;
+
+  <span class="k">const</span> meets =
+    comparator === <span class="s">'GTE'</span>     ? value >= goal :
+    comparator === <span class="s">'GT'</span>      ? value >  goal :
+    comparator === <span class="s">'LTE'</span>     ? value <= goal :
+    comparator === <span class="s">'LT'</span>      ? value <  goal :
+    comparator === <span class="s">'EQ'</span>      ? value === goal :
+    <span class="c">/* BETWEEN */</span>             value >= goal && value <= goalUpper;
+  <span class="k">if</span> (meets) <span class="k">return</span> <span class="s">'green'</span>;
+
+  <span class="c">// missed: distance past the nearest bound, as a fraction of that bound</span>
+  <span class="k">const</span> bound = comparator === <span class="s">'BETWEEN'</span>
+    ? (value < goal ? goal : goalUpper)
+    : goal;
+  <span class="k">const</span> miss = Math.abs(value - bound) / Math.abs(bound);
+  <span class="k">return</span> miss <= BAND ? <span class="s">'yellow'</span> : <span class="s">'red'</span>;
+}</pre>
+      </section>
+
+      <!-- 9 DEPLOY -->
+      <section class="doc" id="deploy">
+        <div class="kicker">09 · Deployment & operations</div>
+        <h2>How it ships and runs</h2>
+        <div class="grid2">
+          <div class="card">
+            <h3 style="margin-top: 0">CI (every PR)</h3>
+            <ul>
+              <li>Lint (ESLint) + format check (Prettier)</li>
+              <li>Typecheck (<code>tsc --noEmit</code>) on server + client</li>
+              <li>Unit + API tests (Vitest, isolated test DB) and E2E (Playwright)</li>
+              <li>Build client + server; fail the merge if anything is red</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3 style="margin-top: 0">Deploy (on merge to main)</h3>
+            <ul>
+              <li>GitHub OIDC assumes a deploy role, no long-lived AWS keys</li>
+              <li>SSM Run Command pulls the release on EC2</li>
+              <li><code>prisma migrate deploy</code>, then <code>systemctl reload kpi-api</code></li>
+              <li>nginx serves the freshly built SPA assets</li>
+            </ul>
+          </div>
+        </div>
+        <div class="callout">
+          <strong>Infra is Terraform.</strong> VPC, Aurora cluster, EC2, IAM roles, and security
+          groups live in <code>infra/</code>. Aurora sits in a private subnet reachable only from the
+          API's security group. Cloudflare Access (the app + Google IdP + policy) is a documented
+          one-time manual setup, not Terraformed.
+        </div>
+      </section>
+
+      <!-- 10 TESTING & SECURITY -->
+      <section class="doc" id="quality">
+        <div class="kicker">10 · Testing & security</div>
+        <h2>Confidence & posture</h2>
+        <div class="grid2">
+          <div class="card">
+            <h3 style="margin-top: 0">Testing</h3>
+            <ul>
+              <li><b>Unit</b> · status logic, authz predicates, validators (Vitest, mocked boundaries).</li>
+              <li><b>API</b> · every endpoint's 2xx / 4xx / 401 / 403 / 404 paths against an isolated test DB (Vitest + Supertest).</li>
+              <li><b>E2E</b> · create KPI, group into a View, share it, verify a viewer is read-only (Playwright).</li>
+              <li>85% coverage floor; authz + status approach 100%.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3 style="margin-top: 0">Security posture</h3>
+            <ul>
+              <li>No public inbound ports; only the outbound Cloudflare Tunnel.</li>
+              <li>Origin fails closed on any JWT verification error.</li>
+              <li>Authorization enforced in middleware on every route, no unguarded endpoints.</li>
+              <li>Prisma parameterizes all queries; no string-built SQL.</li>
+              <li>Secrets in SSM; least-privilege IAM; nightly Aurora backups.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <div class="footer">
+        Dealership Accelerator · DAOS KPI Tracker · System Architecture v2 · 2026-07-09 · Internal
+        use only. No Lead Left Behind.
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,1776 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KPI Tracker: UI Design</title>
+    <meta
+      name="description"
+      content="Static UI mockups for the DAOS KPI Tracker: KPIs, Views, and access to Views."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* ---- DAOS Design System tokens (colors_and_type.css) ---- */
+      :root {
+        --primary: #c1ff72;
+        --primary-hover: #b0f050;
+        --purple: #6329e5;
+        --success: #22c55e;
+        --warning: #f59e0b;
+        --error: #ea5a6e;
+        --bg-base: #0c0c0e;
+        --surface-1: #1c1c22;
+        --card-bg: rgba(20, 20, 26, 0.85);
+        --text-primary: #f0f0f2;
+        --text-secondary: #8a8a9a;
+        --text-muted: #55556a;
+        --border: rgba(255, 255, 255, 0.08);
+        --border-soft: rgba(255, 255, 255, 0.05);
+        --radius-sm: 8px;
+        --radius-md: 12px;
+        --radius-lg: 16px;
+        --radius-xl: 20px;
+        --radius-2xl: 24px;
+        --radius-full: 9999px;
+        --tracking-label: 0.08em;
+        --tracking-tight: -0.04em;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      .icon {
+        width: 16px;
+        height: 16px;
+        flex: none;
+      }
+      .icon--sm {
+        width: 13px;
+        height: 13px;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+          'Helvetica Neue', Arial, sans-serif;
+        color: var(--text-primary);
+        -webkit-font-smoothing: antialiased;
+        line-height: 1.6;
+        background:
+          radial-gradient(circle at top center, rgba(99, 41, 229, 0.18), transparent 26%),
+          radial-gradient(circle at left 20%, rgba(193, 255, 114, 0.06), transparent 24%),
+          #0c0c0e;
+        background-attachment: fixed;
+        padding-bottom: 96px;
+      }
+      ::selection {
+        background: var(--primary);
+        color: #0c0c0e;
+      }
+
+      /* ---- Page intro ---- */
+      .intro {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 64px 24px 8px;
+      }
+      .intro .eyebrow {
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin-bottom: 12px;
+      }
+      .intro h1 {
+        font-size: 48px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        line-height: 1.1;
+      }
+      .intro p {
+        color: var(--text-secondary);
+        max-width: 680px;
+        margin-top: 12px;
+      }
+      .toc {
+        max-width: 1100px;
+        margin: 20px auto 0;
+        padding: 0 24px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .toc a {
+        font-size: 12px;
+        color: var(--text-secondary);
+        text-decoration: none;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-full);
+        padding: 5px 12px;
+        background: var(--card-bg);
+      }
+      .toc a:hover {
+        color: var(--primary);
+        border-color: rgba(193, 255, 114, 0.4);
+      }
+
+      /* ---- Frame scaffolding (each mock screen) ---- */
+      .frame {
+        max-width: 1100px;
+        margin: 56px auto 0;
+        padding: 0 24px;
+        scroll-margin-top: 24px;
+      }
+      .frame__label {
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .frame__label .num {
+        color: var(--primary);
+      }
+      .screen {
+        border: 1px solid var(--border);
+        border-radius: var(--radius-2xl);
+        overflow: hidden;
+        background: rgba(12, 12, 14, 0.6);
+        backdrop-filter: blur(16px);
+      }
+
+      /* ---- App top nav ---- */
+      .nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        height: 56px;
+        padding: 0 24px;
+        border-bottom: 1px solid var(--border);
+        background: var(--bg-base);
+      }
+      .lockup {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .lockup__mark {
+        width: 26px;
+        height: 26px;
+        color: var(--primary);
+      }
+      .lockup__word {
+        font-weight: 800;
+        font-size: 18px;
+        letter-spacing: var(--tracking-tight);
+        background: linear-gradient(90deg, var(--primary) 0%, var(--purple) 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      .lockup__sub {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        color: var(--text-muted);
+        border-left: 1px solid var(--border);
+        padding-left: 10px;
+        margin-left: 2px;
+      }
+      .nav__tabs {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        flex: 1;
+        margin-left: 12px;
+      }
+      .tab {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 16px 12px;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-muted);
+        border-bottom: 2px solid transparent;
+        white-space: nowrap;
+      }
+      .tab--active {
+        color: var(--primary);
+        font-weight: 600;
+        border-bottom-color: var(--primary);
+      }
+      .nav__right {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .user-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        color: var(--text-secondary);
+      }
+      .user-chip .avatar {
+        width: 26px;
+        height: 26px;
+        border-radius: var(--radius-full);
+        background: rgba(193, 255, 114, 0.15);
+        color: var(--primary);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: 700;
+      }
+
+      /* ---- Buttons ---- */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 14px;
+        border-radius: var(--radius-sm);
+        font-size: 13px;
+        font-weight: 600;
+        border: 1px solid var(--border);
+        color: var(--text-primary);
+        background: transparent;
+        cursor: pointer;
+      }
+      .btn--primary {
+        background: var(--primary);
+        color: #0c0c0e;
+        border-color: var(--primary);
+        font-weight: 700;
+      }
+      .btn--ghost {
+        color: var(--text-secondary);
+      }
+      .btn--danger {
+        color: var(--error);
+        border-color: rgba(234, 90, 110, 0.4);
+      }
+      .btn--sm {
+        padding: 6px 10px;
+        font-size: 12px;
+      }
+
+      /* ---- Page body inside a screen ---- */
+      .page {
+        padding: 28px 28px 36px;
+      }
+      .page__head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+      .page__title {
+        font-size: 28px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+      }
+      .page__subtitle {
+        color: var(--text-secondary);
+        font-size: 14px;
+        margin-top: 2px;
+      }
+      .owner-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--primary);
+        border: 1px solid rgba(193, 255, 114, 0.4);
+        border-radius: var(--radius-full);
+        padding: 3px 10px;
+      }
+      .shared-tag {
+        color: var(--text-secondary);
+        border-color: var(--border);
+      }
+
+      /* ---- Status summary strip ---- */
+      .summary {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-bottom: 24px;
+      }
+      .summary__cell {
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 16px;
+        background: var(--card-bg);
+      }
+      .summary__count {
+        font-size: 32px;
+        font-weight: 800;
+        line-height: 1;
+      }
+      .summary__label {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+        margin-top: 8px;
+      }
+
+      /* ---- Status dot/badge (color is never alone) ---- */
+      .dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        display: inline-block;
+        flex: none;
+      }
+      .dot--green {
+        background: var(--success);
+      }
+      .dot--yellow {
+        background: var(--warning);
+      }
+      .dot--red {
+        background: var(--error);
+      }
+      .dot--unknown {
+        background: var(--text-muted);
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: var(--radius-full);
+        font-size: 12px;
+        font-weight: 600;
+        border: 1px solid var(--border);
+      }
+      .badge--green {
+        color: var(--success);
+        border-color: rgba(34, 197, 94, 0.35);
+        background: rgba(34, 197, 94, 0.08);
+      }
+      .badge--yellow {
+        color: var(--warning);
+        border-color: rgba(245, 158, 11, 0.35);
+        background: rgba(245, 158, 11, 0.08);
+      }
+      .badge--red {
+        color: var(--error);
+        border-color: rgba(234, 90, 110, 0.35);
+        background: rgba(234, 90, 110, 0.08);
+      }
+      .badge--unknown {
+        color: var(--text-secondary);
+      }
+      .cadence {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-full);
+        padding: 2px 8px;
+      }
+
+      /* ---- KPI card grid ---- */
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+      }
+      .kpi-card {
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 20px;
+        background: var(--card-bg);
+        backdrop-filter: blur(16px);
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        cursor: pointer;
+        transition: transform 0.18s ease;
+      }
+      .kpi-card:hover {
+        transform: translateY(-1px);
+      }
+      .kpi-card__top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 10px;
+      }
+      .kpi-card__name {
+        font-size: 15px;
+        font-weight: 600;
+      }
+      .kpi-card__rule {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-top: 2px;
+      }
+      .kpi-card__value {
+        font-size: 36px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        line-height: 1;
+      }
+      .kpi-card__unit {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        margin-left: 4px;
+      }
+      .kpi-card__foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 12px;
+        color: var(--text-muted);
+      }
+
+      /* ---- Inline trend sparkline (on every KPI card) ---- */
+      .spark {
+        width: 100%;
+        height: 40px;
+        display: block;
+      }
+      .spark polyline {
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .spark .goal {
+        stroke: var(--text-muted);
+        stroke-width: 1;
+        stroke-dasharray: 3 3;
+      }
+      .spark .pt {
+        fill: currentColor;
+        stroke: none;
+      }
+      /* status-colored so trend reinforces the already-labeled status, never color alone */
+      .spark--green {
+        color: var(--success);
+      }
+      .spark--yellow {
+        color: var(--warning);
+      }
+      .spark--red {
+        color: var(--error);
+      }
+      .spark--none {
+        height: 40px;
+        display: flex;
+        align-items: center;
+        font-size: 12px;
+        color: var(--text-muted);
+      }
+
+      /* ---- View card grid ---- */
+      .view-card {
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 20px;
+        background: var(--card-bg);
+        backdrop-filter: blur(16px);
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        cursor: pointer;
+        transition: transform 0.18s ease;
+      }
+      .view-card:hover {
+        transform: translateY(-1px);
+      }
+      .view-card__name {
+        font-size: 17px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .view-card__desc {
+        font-size: 13px;
+        color: var(--text-secondary);
+        margin-top: 4px;
+      }
+      .view-card__stats {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .mini-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-secondary);
+      }
+      .view-card__foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 12px;
+        color: var(--text-muted);
+        border-top: 1px solid var(--border-soft);
+        padding-top: 14px;
+      }
+      .avatars {
+        display: inline-flex;
+        align-items: center;
+      }
+      .avatars .avatar {
+        width: 22px;
+        height: 22px;
+        border-radius: var(--radius-full);
+        background: var(--surface-1);
+        border: 1px solid var(--bg-base);
+        color: var(--text-secondary);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        font-weight: 700;
+        margin-left: -6px;
+      }
+      .avatars .avatar:first-child {
+        margin-left: 0;
+      }
+
+      /* ---- Section subhead within a page ---- */
+      .subhead {
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin: 8px 0 14px;
+      }
+      .subhead:not(:first-child) {
+        margin-top: 32px;
+      }
+
+      /* ---- Detail layout ---- */
+      .back {
+        font-size: 13px;
+        color: var(--text-secondary);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 16px;
+      }
+      .detail-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 16px;
+      }
+      .panel {
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 20px;
+        background: var(--card-bg);
+      }
+      .panel__title {
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin-bottom: 16px;
+      }
+      .stat-row {
+        display: flex;
+        gap: 28px;
+        margin-bottom: 18px;
+      }
+      .stat__k {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+      }
+      .stat__v {
+        font-size: 26px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        margin-top: 2px;
+      }
+      .chart {
+        width: 100%;
+        height: auto;
+        display: block;
+      }
+      .chart-caption {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-top: 10px;
+      }
+      .legend {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .legend__line {
+        width: 16px;
+        height: 0;
+        border-top: 2px dashed var(--text-secondary);
+      }
+      .legend__line--solid {
+        border-top: 2px solid var(--primary);
+      }
+
+      /* ---- Tables ---- */
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+      th {
+        text-align: left;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        padding: 8px 8px;
+        border-bottom: 1px solid var(--border);
+      }
+      td {
+        padding: 10px 8px;
+        border-bottom: 1px solid var(--border-soft);
+        color: var(--text-secondary);
+      }
+      td.value {
+        color: var(--text-primary);
+        font-weight: 600;
+      }
+
+      /* ---- Forms ---- */
+      .field {
+        margin-bottom: 16px;
+      }
+      .field label {
+        display: block;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        margin-bottom: 6px;
+      }
+      .control {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border);
+        background: rgba(18, 18, 24, 0.9);
+        color: var(--text-primary);
+        font-size: 14px;
+      }
+      .control:focus {
+        outline: none;
+        border-color: var(--primary);
+      }
+      .field-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .seg {
+        display: flex;
+        gap: 8px;
+      }
+      .seg__opt {
+        flex: 1;
+        text-align: center;
+        padding: 9px 10px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border);
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        cursor: pointer;
+      }
+      .seg__opt--active {
+        color: #0c0c0e;
+        background: var(--primary);
+        border-color: var(--primary);
+      }
+      .hint {
+        font-size: 12px;
+        margin-top: 6px;
+        color: var(--text-muted);
+      }
+      .hint--ok {
+        color: var(--success);
+      }
+      .hint--error {
+        color: var(--error);
+      }
+
+      /* ---- KPI picker (in view editor) ---- */
+      .picker {
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        max-height: 240px;
+        overflow: auto;
+      }
+      .picker__row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 11px 14px;
+        border-bottom: 1px solid var(--border-soft);
+        font-size: 13px;
+      }
+      .picker__row:last-child {
+        border-bottom: none;
+      }
+      .checkbox {
+        width: 18px;
+        height: 18px;
+        border-radius: 5px;
+        border: 1px solid var(--border);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: none;
+        color: #0c0c0e;
+      }
+      .checkbox--on {
+        background: var(--primary);
+        border-color: var(--primary);
+      }
+      .picker__name {
+        color: var(--text-primary);
+        font-weight: 500;
+      }
+      .picker__meta {
+        margin-left: auto;
+        color: var(--text-muted);
+        font-size: 12px;
+      }
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+      }
+      .chip-kpi {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        color: var(--text-primary);
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-full);
+        padding: 5px 8px 5px 12px;
+      }
+      .chip-kpi svg {
+        cursor: pointer;
+        color: var(--text-muted);
+      }
+
+      /* ---- Member rows (share modal) ---- */
+      .member {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--border-soft);
+      }
+      .member:last-child {
+        border-bottom: none;
+      }
+      .member .avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: var(--radius-full);
+        background: var(--surface-1);
+        color: var(--text-secondary);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 700;
+        flex: none;
+      }
+      .member__who {
+        font-size: 13px;
+      }
+      .member__who b {
+        color: var(--text-primary);
+        font-weight: 600;
+      }
+      .member__who span {
+        display: block;
+        color: var(--text-muted);
+        font-size: 12px;
+      }
+      .member__right {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .access-pill {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        border-radius: var(--radius-full);
+        padding: 3px 10px;
+      }
+      .access-pill--owner {
+        color: var(--primary);
+        border: 1px solid rgba(193, 255, 114, 0.4);
+      }
+      .access-pill--viewer {
+        color: var(--text-secondary);
+        border: 1px solid var(--border);
+      }
+
+      /* ---- Modal mock ---- */
+      .modal-wrap {
+        position: relative;
+        padding: 36px;
+        display: flex;
+        justify-content: center;
+        background: repeating-linear-gradient(
+          45deg,
+          rgba(255, 255, 255, 0.015) 0 12px,
+          transparent 12px 24px
+        );
+      }
+      .modal {
+        width: 480px;
+        max-width: 100%;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xl);
+        background: #080810;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        overflow: hidden;
+      }
+      .modal__head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 20px;
+        border-bottom: 1px solid var(--border);
+      }
+      .modal__title {
+        font-size: 16px;
+        font-weight: 700;
+      }
+      .modal__body {
+        padding: 20px;
+      }
+      .modal__foot {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        padding: 16px 20px;
+        border-top: 1px solid var(--border);
+      }
+
+      .tag {
+        font-size: 11px;
+        color: var(--text-muted);
+      }
+      .muted {
+        color: var(--text-muted);
+      }
+      .flex {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+
+      @media (max-width: 760px) {
+        .grid,
+        .summary {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .detail-grid {
+          grid-template-columns: 1fr;
+        }
+        .nav__tabs {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Reusable A-mark + line-drawn glyphs (1.5px stroke, round caps, no fill) per DAOS iconography -->
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+      <symbol id="da-mark" viewBox="0 0 96 96">
+        <path
+          fill="currentColor"
+          d="M95.36,23.12l-.26,72.32h-20.88s.23-63.83.23-63.83c.01-4.09-5.18-5.66-7.39-2.23L24.49,95.43H.36S54.82,10.91,54.82,10.91c12.14-18.83,40.62-10.26,40.54,12.21Z"
+        />
+        <path
+          fill="currentColor"
+          d="M65.45,70.04c.02-6.31-7.98-8.72-11.39-3.43l-18.58,28.83h29.88s.09-25.4.09-25.4Z"
+        />
+      </symbol>
+      <symbol id="ic-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14" /></symbol>
+      <symbol id="ic-arrow-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7" /></symbol>
+      <symbol id="ic-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12" /></symbol>
+      <symbol id="ic-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5" /></symbol>
+      <symbol id="ic-trend-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17" /><polyline points="16 7 22 7 22 13" /></symbol>
+      <symbol id="ic-trend-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 17 13.5 8.5 8.5 13.5 2 7" /><polyline points="16 17 22 17 22 11" /></symbol>
+      <symbol id="ic-views" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="1.5" /><rect x="13" y="3" width="8" height="8" rx="1.5" /><rect x="3" y="13" width="8" height="8" rx="1.5" /><rect x="13" y="13" width="8" height="8" rx="1.5" /></symbol>
+      <symbol id="ic-share" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4" /></symbol>
+      <symbol id="ic-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13A4 4 0 0 1 16 11" /></symbol>
+      <symbol id="ic-grip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="6" r="1" /><circle cx="9" cy="12" r="1" /><circle cx="9" cy="18" r="1" /><circle cx="15" cy="6" r="1" /><circle cx="15" cy="12" r="1" /><circle cx="15" cy="18" r="1" /></symbol>
+    </svg>
+
+    <section class="intro">
+      <div class="eyebrow">Dealership Accelerator · Internal Tool · UI Design</div>
+      <h1>KPI Tracker UI Design</h1>
+      <p>
+        Static design reference for the KPI Tracker screens, built on the DAOS Design System (jet
+        black, Sea Salt text, DA Lime for emphasis only, Inter, 8pt grid). Covers the three CRUD
+        surfaces: KPIs, Views (grouping KPIs), and access to Views. Status uses semantic green /
+        yellow / red, always paired with a label. Never color alone. These are mockups, not the
+        live app.
+      </p>
+    </section>
+    <nav class="toc">
+      <a href="#s1">01 Dashboard</a>
+      <a href="#s2">02 KPI detail</a>
+      <a href="#s3">03 Create / edit KPI</a>
+      <a href="#s4">04 Record value</a>
+      <a href="#s5">05 Views list</a>
+      <a href="#s6">06 View detail</a>
+      <a href="#s7">07 Create / edit View</a>
+      <a href="#s8">08 Manage access</a>
+      <a href="#s9">09 Archived</a>
+    </nav>
+
+    <!-- ============ 1. DASHBOARD ============ -->
+    <div class="frame" id="s1">
+      <div class="frame__label"><span class="num">01</span> Dashboard · all KPIs</div>
+      <div class="screen">
+        <nav class="nav">
+          <div class="lockup">
+            <svg class="lockup__mark"><use href="#da-mark" /></svg>
+            <span class="lockup__word">DAOS</span>
+            <span class="lockup__sub">KPI Tracker</span>
+          </div>
+          <div class="nav__tabs">
+            <span class="tab tab--active"><svg width="15" height="15"><use href="#da-mark" /></svg> Dashboard</span>
+            <span class="tab"><svg class="icon icon--sm"><use href="#ic-views" /></svg> Views</span>
+            <span class="tab">Archived</span>
+          </div>
+          <div class="nav__right">
+            <button class="btn btn--primary btn--sm">
+              <svg class="icon icon--sm"><use href="#ic-plus" /></svg> New KPI
+            </button>
+            <span class="user-chip"><span class="avatar">KF</span></span>
+          </div>
+        </nav>
+
+        <div class="page">
+          <div class="page__head">
+            <div>
+              <div class="page__title">All KPIs</div>
+              <div class="page__subtitle">
+                Every metric you can access · 12 active · updated through Jun 2026
+              </div>
+            </div>
+          </div>
+
+          <div class="summary">
+            <div class="summary__cell">
+              <div class="summary__count" style="color: var(--success)">7</div>
+              <div class="summary__label"><span class="dot dot--green"></span> On target</div>
+            </div>
+            <div class="summary__cell">
+              <div class="summary__count" style="color: var(--warning)">3</div>
+              <div class="summary__label"><span class="dot dot--yellow"></span> Watch</div>
+            </div>
+            <div class="summary__cell">
+              <div class="summary__count" style="color: var(--error)">1</div>
+              <div class="summary__label"><span class="dot dot--red"></span> Off target</div>
+            </div>
+            <div class="summary__cell">
+              <div class="summary__count muted">1</div>
+              <div class="summary__label"><span class="dot dot--unknown"></span> No data</div>
+            </div>
+          </div>
+
+          <div class="grid">
+            <div class="kpi-card">
+              <div class="kpi-card__top">
+                <div>
+                  <div class="kpi-card__name">Lead Response Rate</div>
+                  <div class="kpi-card__rule">Goal: ≥ 90%</div>
+                </div>
+                <span class="badge badge--green"><span class="dot dot--green"></span> On target</span>
+              </div>
+              <div><span class="kpi-card__value">94</span><span class="kpi-card__unit">%</span></div>
+              <svg class="spark spark--green" viewBox="0 0 240 40" role="img" aria-label="6-month trend, rising and on target">
+                <line class="goal" x1="0" y1="24" x2="240" y2="24" />
+                <polyline points="6,34 44,31 82,32 120,25 158,20 196,15 234,10" />
+                <circle class="pt" cx="234" cy="10" r="2.6" />
+              </svg>
+              <div class="kpi-card__foot">
+                <span class="cadence">Monthly</span>
+                <span class="flex"><svg class="icon icon--sm"><use href="#ic-trend-up" /></svg> Jun 2026</span>
+              </div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-card__top">
+                <div>
+                  <div class="kpi-card__name">Avg. Response Time</div>
+                  <div class="kpi-card__rule">Goal: ≤ 6 min</div>
+                </div>
+                <span class="badge badge--yellow"><span class="dot dot--yellow"></span> Watch</span>
+              </div>
+              <div><span class="kpi-card__value">6.4</span><span class="kpi-card__unit">min</span></div>
+              <svg class="spark spark--yellow" viewBox="0 0 240 40" role="img" aria-label="Weekly trend, drifting above goal">
+                <line class="goal" x1="0" y1="26" x2="240" y2="26" />
+                <polyline points="6,30 44,28 82,31 120,29 158,33 196,32 234,35" />
+                <circle class="pt" cx="234" cy="35" r="2.6" />
+              </svg>
+              <div class="kpi-card__foot">
+                <span class="cadence">Weekly</span>
+                <span class="flex"><svg class="icon icon--sm"><use href="#ic-trend-down" /></svg> Wk 26</span>
+              </div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-card__top">
+                <div>
+                  <div class="kpi-card__name">Appointments Booked</div>
+                  <div class="kpi-card__rule">Goal: ≥ 200</div>
+                </div>
+                <span class="badge badge--red"><span class="dot dot--red"></span> Off target</span>
+              </div>
+              <div><span class="kpi-card__value">151</span></div>
+              <svg class="spark spark--red" viewBox="0 0 240 40" role="img" aria-label="Monthly trend, declining below goal">
+                <line class="goal" x1="0" y1="12" x2="240" y2="12" />
+                <polyline points="6,14 44,17 82,19 120,23 158,27 196,31 234,35" />
+                <circle class="pt" cx="234" cy="35" r="2.6" />
+              </svg>
+              <div class="kpi-card__foot">
+                <span class="cadence">Monthly</span>
+                <span class="flex"><svg class="icon icon--sm"><use href="#ic-trend-down" /></svg> Jun 2026</span>
+              </div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-card__top">
+                <div>
+                  <div class="kpi-card__name">Gross per Unit</div>
+                  <div class="kpi-card__rule">Goal: ≥ $2,800</div>
+                </div>
+                <span class="badge badge--green"><span class="dot dot--green"></span> On target</span>
+              </div>
+              <div><span class="kpi-card__unit" style="margin: 0">$</span><span class="kpi-card__value">3,180</span></div>
+              <svg class="spark spark--green" viewBox="0 0 240 40" role="img" aria-label="Monthly trend, rising and on target">
+                <line class="goal" x1="0" y1="28" x2="240" y2="28" />
+                <polyline points="6,33 44,31 82,27 120,25 158,19 196,16 234,12" />
+                <circle class="pt" cx="234" cy="12" r="2.6" />
+              </svg>
+              <div class="kpi-card__foot">
+                <span class="cadence">Monthly</span>
+                <span class="flex"><svg class="icon icon--sm"><use href="#ic-trend-up" /></svg> Jun 2026</span>
+              </div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-card__top">
+                <div>
+                  <div class="kpi-card__name">Show Rate</div>
+                  <div class="kpi-card__rule">Goal: ≥ 65%</div>
+                </div>
+                <span class="badge badge--green"><span class="dot dot--green"></span> On target</span>
+              </div>
+              <div><span class="kpi-card__value">71</span><span class="kpi-card__unit">%</span></div>
+              <svg class="spark spark--green" viewBox="0 0 240 40" role="img" aria-label="Monthly trend, rising and on target">
+                <line class="goal" x1="0" y1="26" x2="240" y2="26" />
+                <polyline points="6,31 44,29 82,26 120,22 158,18 196,15 234,11" />
+                <circle class="pt" cx="234" cy="11" r="2.6" />
+              </svg>
+              <div class="kpi-card__foot">
+                <span class="cadence">Monthly</span>
+                <span class="flex"><svg class="icon icon--sm"><use href="#ic-trend-up" /></svg> Jun 2026</span>
+              </div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-card__top">
+                <div>
+                  <div class="kpi-card__name">CSI Score</div>
+                  <div class="kpi-card__rule">Goal: ≥ 4.5</div>
+                </div>
+                <span class="badge badge--unknown"><span class="dot dot--unknown"></span> No data</span>
+              </div>
+              <div><span class="kpi-card__value muted">n/a</span></div>
+              <div class="spark--none">Trend appears after the first reading</div>
+              <div class="kpi-card__foot"><span class="cadence">Quarterly</span><span>No readings yet</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 2. KPI DETAIL + TREND ============ -->
+    <div class="frame" id="s2">
+      <div class="frame__label"><span class="num">02</span> KPI detail · trend over time</div>
+      <div class="screen">
+        <nav class="nav">
+          <div class="lockup">
+            <svg class="lockup__mark"><use href="#da-mark" /></svg>
+            <span class="lockup__word">DAOS</span>
+            <span class="lockup__sub">KPI Tracker</span>
+          </div>
+          <div class="nav__right"><span class="user-chip"><span class="avatar">KF</span></span></div>
+        </nav>
+
+        <div class="page">
+          <div class="back"><svg class="icon icon--sm"><use href="#ic-arrow-left" /></svg> Back to dashboard</div>
+          <div class="page__head">
+            <div>
+              <div class="page__title">Lead Response Rate</div>
+              <div class="page__subtitle">
+                Percentage of leads answered within SLA · monthly · owner kevin@dealershipaccelerator.io
+              </div>
+            </div>
+            <div style="display: flex; gap: 10px">
+              <button class="btn btn--ghost btn--sm">Archive</button>
+              <button class="btn btn--sm">Edit</button>
+              <button class="btn btn--primary btn--sm">
+                <svg class="icon icon--sm"><use href="#ic-plus" /></svg> Record value
+              </button>
+            </div>
+          </div>
+
+          <div class="detail-grid">
+            <div class="panel">
+              <div class="panel__title">Trend over time</div>
+              <svg class="chart" viewBox="0 0 640 240" role="img" aria-label="Trend chart">
+                <g stroke="rgba(255,255,255,0.06)" stroke-width="1">
+                  <line x1="40" y1="30" x2="620" y2="30" />
+                  <line x1="40" y1="80" x2="620" y2="80" />
+                  <line x1="40" y1="130" x2="620" y2="130" />
+                  <line x1="40" y1="180" x2="620" y2="180" />
+                </g>
+                <g fill="#55556a" font-size="11" font-family="Inter">
+                  <text x="10" y="34">100</text>
+                  <text x="14" y="84">90</text>
+                  <text x="14" y="134">80</text>
+                  <text x="14" y="184">70</text>
+                </g>
+                <line x1="40" y1="80" x2="620" y2="80" stroke="#8a8a9a" stroke-width="1.5" stroke-dasharray="5 5" />
+                <text x="566" y="74" fill="#8a8a9a" font-size="11" font-family="Inter">Goal ≥ 90</text>
+                <polyline fill="none" stroke="#c1ff72" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" points="40,150 136,130 232,110 328,120 424,70 520,60 616,52" />
+                <g fill="#c1ff72">
+                  <circle cx="40" cy="150" r="3.5" />
+                  <circle cx="136" cy="130" r="3.5" />
+                  <circle cx="232" cy="110" r="3.5" />
+                  <circle cx="328" cy="120" r="3.5" />
+                  <circle cx="424" cy="70" r="3.5" />
+                  <circle cx="520" cy="60" r="3.5" />
+                  <circle cx="616" cy="52" r="4.5" />
+                </g>
+                <g fill="#55556a" font-size="11" font-family="Inter" text-anchor="middle">
+                  <text x="40" y="206">Dec</text>
+                  <text x="136" y="206">Jan</text>
+                  <text x="232" y="206">Feb</text>
+                  <text x="328" y="206">Mar</text>
+                  <text x="424" y="206">Apr</text>
+                  <text x="520" y="206">May</text>
+                  <text x="616" y="206">Jun</text>
+                </g>
+              </svg>
+              <div class="chart-caption">
+                <span class="legend"><span class="legend__line legend__line--solid"></span> Reading</span>
+                <span class="legend"><span class="legend__line"></span> Goal reference</span>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel__title">Current status</div>
+              <div style="margin-bottom: 18px">
+                <span class="badge badge--green"><span class="dot dot--green"></span> On target</span>
+              </div>
+              <div class="stat-row">
+                <div><div class="stat__k">Current</div><div class="stat__v">94%</div></div>
+                <div><div class="stat__k">Goal</div><div class="stat__v">≥ 90%</div></div>
+              </div>
+              <div class="stat-row" style="margin-bottom: 0">
+                <div><div class="stat__k">Period</div><div class="stat__v" style="font-size: 18px">Jun 2026</div></div>
+                <div><div class="stat__k">In views</div><div class="stat__v" style="font-size: 18px">3</div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel" style="margin-top: 16px">
+            <div class="panel__title">Reading history</div>
+            <table>
+              <thead>
+                <tr><th>Period</th><th>Value</th><th>Status</th><th>Recorded by</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Jun 2026</td>
+                  <td class="value">94%</td>
+                  <td><span class="badge badge--green"><span class="dot dot--green"></span> On target</span></td>
+                  <td>kevin@dealershipaccelerator.io</td>
+                </tr>
+                <tr>
+                  <td>May 2026</td>
+                  <td class="value">92%</td>
+                  <td><span class="badge badge--green"><span class="dot dot--green"></span> On target</span></td>
+                  <td>kevin@dealershipaccelerator.io</td>
+                </tr>
+                <tr>
+                  <td>Apr 2026</td>
+                  <td class="value">91%</td>
+                  <td><span class="badge badge--green"><span class="dot dot--green"></span> On target</span></td>
+                  <td>maria@dealershipaccelerator.io</td>
+                </tr>
+                <tr>
+                  <td>Mar 2026</td>
+                  <td class="value">86%</td>
+                  <td><span class="badge badge--yellow"><span class="dot dot--yellow"></span> Watch</span></td>
+                  <td>maria@dealershipaccelerator.io</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 3. CREATE / EDIT KPI (modal) ============ -->
+    <div class="frame" id="s3">
+      <div class="frame__label"><span class="num">03</span> Create / edit KPI · unit, rule, goal, cadence</div>
+      <div class="screen">
+        <div class="modal-wrap">
+          <div class="modal">
+            <div class="modal__head">
+              <span class="modal__title">New KPI</span>
+              <span class="muted flex" style="cursor: pointer"><svg class="icon"><use href="#ic-x" /></svg></span>
+            </div>
+            <div class="modal__body">
+              <div class="field">
+                <label>Name</label>
+                <input class="control" value="Lead Response Rate" />
+              </div>
+              <div class="field">
+                <label>Description <span class="tag">(optional)</span></label>
+                <input class="control" value="Leads answered within SLA" />
+              </div>
+              <div class="field">
+                <label>Unit</label>
+                <div class="seg">
+                  <div class="seg__opt">Number</div>
+                  <div class="seg__opt seg__opt--active">Percent</div>
+                  <div class="seg__opt">Dollars</div>
+                </div>
+              </div>
+              <div class="field">
+                <label>Rule</label>
+                <select class="control">
+                  <option>equal to</option>
+                  <option>greater than</option>
+                  <option selected>greater than or equal to</option>
+                  <option>less than</option>
+                  <option>less than or equal to</option>
+                  <option>between</option>
+                </select>
+              </div>
+              <!-- Non-between rules show a single Goal value -->
+              <div class="field">
+                <label>Goal value</label>
+                <input class="control" value="90" />
+              </div>
+              <!-- When Rule = between, the Goal value field is replaced by a Lower + Upper pair -->
+              <div class="field" style="margin-top: -4px">
+                <label class="tag" style="display: block; margin-bottom: 6px">When the rule is "between":</label>
+                <div class="field-row">
+                  <div class="field" style="margin-bottom: 0">
+                    <label>Lower value</label>
+                    <input class="control" placeholder="e.g. 2,500" style="opacity: 0.55" />
+                  </div>
+                  <div class="field" style="margin-bottom: 0">
+                    <label>Upper value</label>
+                    <input class="control" placeholder="e.g. 4,000" style="opacity: 0.55" />
+                  </div>
+                </div>
+              </div>
+              <div class="field" style="margin-bottom: 8px">
+                <label>Cadence</label>
+                <div class="seg">
+                  <div class="seg__opt">Weekly</div>
+                  <div class="seg__opt seg__opt--active">Monthly</div>
+                  <div class="seg__opt">Quarterly</div>
+                </div>
+              </div>
+              <div class="hint hint--ok flex">
+                <svg class="icon icon--sm"><use href="#ic-check" /></svg> Rule: percent, ≥ 90. Green at 90 or higher; yellow within 10% (81 to 90); red below.
+              </div>
+            </div>
+            <div class="modal__foot">
+              <button class="btn btn--ghost">Cancel</button>
+              <button class="btn btn--primary">Save KPI</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 4. RECORD VALUE (modal) ============ -->
+    <div class="frame" id="s4">
+      <div class="frame__label"><span class="num">04</span> Record value · period-based, backdatable</div>
+      <div class="screen">
+        <div class="modal-wrap">
+          <div class="modal">
+            <div class="modal__head">
+              <span class="modal__title">Record value · Lead Response Rate</span>
+              <span class="muted flex" style="cursor: pointer"><svg class="icon"><use href="#ic-x" /></svg></span>
+            </div>
+            <div class="modal__body">
+              <div class="field-row">
+                <div class="field">
+                  <label>Period <span class="tag">(monthly)</span></label>
+                  <select class="control">
+                    <option>Jun 2026</option>
+                    <option>May 2026</option>
+                    <option>Apr 2026</option>
+                    <option>Mar 2026</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Value <span class="tag">(%)</span></label>
+                  <input class="control" value="94" />
+                </div>
+              </div>
+              <div class="hint flex">
+                <svg class="icon icon--sm"><use href="#ic-check" /></svg>
+                A value already exists for Jun 2026 (92%). Saving will update it. Backdating an older
+                period never changes a newer one.
+              </div>
+              <div class="hint hint--ok flex" style="margin-top: 10px">
+                <span class="badge badge--green"><span class="dot dot--green"></span> On target</span>
+                at 94% vs goal ≥ 90%.
+              </div>
+            </div>
+            <div class="modal__foot">
+              <button class="btn btn--ghost">Cancel</button>
+              <button class="btn btn--primary">Save value</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 5. VIEWS LIST ============ -->
+    <div class="frame" id="s5">
+      <div class="frame__label"><span class="num">05</span> Views · my views + shared with me</div>
+      <div class="screen">
+        <nav class="nav">
+          <div class="lockup">
+            <svg class="lockup__mark"><use href="#da-mark" /></svg>
+            <span class="lockup__word">DAOS</span>
+            <span class="lockup__sub">KPI Tracker</span>
+          </div>
+          <div class="nav__tabs">
+            <span class="tab"><svg width="15" height="15"><use href="#da-mark" /></svg> Dashboard</span>
+            <span class="tab tab--active"><svg class="icon icon--sm"><use href="#ic-views" /></svg> Views</span>
+            <span class="tab">Archived</span>
+          </div>
+          <div class="nav__right">
+            <button class="btn btn--primary btn--sm"><svg class="icon icon--sm"><use href="#ic-plus" /></svg> New View</button>
+            <span class="user-chip"><span class="avatar">KF</span></span>
+          </div>
+        </nav>
+        <div class="page">
+          <div class="page__head">
+            <div>
+              <div class="page__title">Views</div>
+              <div class="page__subtitle">Grouped sets of KPIs. You own some; others are shared with you, read-only.</div>
+            </div>
+          </div>
+
+          <div class="subhead">My views</div>
+          <div class="grid">
+            <div class="view-card">
+              <div>
+                <div class="view-card__name"><svg class="icon" style="color: var(--primary)"><use href="#ic-views" /></svg> BDC Scorecard</div>
+                <div class="view-card__desc">Response and booking metrics for the BDC leads.</div>
+              </div>
+              <div class="view-card__stats">
+                <span class="mini-badge"><span class="dot dot--green"></span> 5</span>
+                <span class="mini-badge"><span class="dot dot--yellow"></span> 1</span>
+                <span class="mini-badge"><span class="dot dot--red"></span> 1</span>
+                <span class="mini-badge muted">· 7 KPIs</span>
+              </div>
+              <div class="view-card__foot">
+                <span class="owner-tag">Owner</span>
+                <span class="flex"><svg class="icon icon--sm"><use href="#ic-users" /></svg> Shared with 3</span>
+              </div>
+            </div>
+            <div class="view-card">
+              <div>
+                <div class="view-card__name"><svg class="icon" style="color: var(--primary)"><use href="#ic-views" /></svg> Store Financials</div>
+                <div class="view-card__desc">Gross, units, and F&amp;I per store.</div>
+              </div>
+              <div class="view-card__stats">
+                <span class="mini-badge"><span class="dot dot--green"></span> 3</span>
+                <span class="mini-badge"><span class="dot dot--unknown"></span> 1</span>
+                <span class="mini-badge muted">· 4 KPIs</span>
+              </div>
+              <div class="view-card__foot">
+                <span class="owner-tag">Owner</span>
+                <span class="flex"><svg class="icon icon--sm"><use href="#ic-users" /></svg> Private</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="subhead">Shared with me</div>
+          <div class="grid">
+            <div class="view-card">
+              <div>
+                <div class="view-card__name"><svg class="icon" style="color: var(--text-secondary)"><use href="#ic-views" /></svg> Exec Weekly</div>
+                <div class="view-card__desc">The numbers Keenan reviews every Monday.</div>
+              </div>
+              <div class="view-card__stats">
+                <span class="mini-badge"><span class="dot dot--green"></span> 6</span>
+                <span class="mini-badge"><span class="dot dot--yellow"></span> 2</span>
+                <span class="mini-badge muted">· 8 KPIs</span>
+              </div>
+              <div class="view-card__foot">
+                <span class="owner-tag shared-tag">Viewer</span>
+                <span class="muted">by keenan@</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 6. VIEW DETAIL ============ -->
+    <div class="frame" id="s6">
+      <div class="frame__label"><span class="num">06</span> View detail · grouped KPIs (owner)</div>
+      <div class="screen">
+        <nav class="nav">
+          <div class="lockup">
+            <svg class="lockup__mark"><use href="#da-mark" /></svg>
+            <span class="lockup__word">DAOS</span>
+            <span class="lockup__sub">KPI Tracker</span>
+          </div>
+          <div class="nav__right"><span class="user-chip"><span class="avatar">KF</span></span></div>
+        </nav>
+        <div class="page">
+          <div class="back"><svg class="icon icon--sm"><use href="#ic-arrow-left" /></svg> Back to views</div>
+          <div class="page__head">
+            <div>
+              <div class="page__title" style="display: flex; align-items: center; gap: 12px">
+                BDC Scorecard <span class="owner-tag">Owner</span>
+              </div>
+              <div class="page__subtitle">Response and booking metrics for the BDC leads · 7 KPIs · shared with 3</div>
+            </div>
+            <div style="display: flex; gap: 10px">
+              <button class="btn btn--sm"><svg class="icon icon--sm"><use href="#ic-share" /></svg> Manage access</button>
+              <button class="btn btn--sm">Edit KPIs</button>
+            </div>
+          </div>
+
+          <div class="summary">
+            <div class="summary__cell">
+              <div class="summary__count" style="color: var(--success)">5</div>
+              <div class="summary__label"><span class="dot dot--green"></span> On target</div>
+            </div>
+            <div class="summary__cell">
+              <div class="summary__count" style="color: var(--warning)">1</div>
+              <div class="summary__label"><span class="dot dot--yellow"></span> Watch</div>
+            </div>
+            <div class="summary__cell">
+              <div class="summary__count" style="color: var(--error)">1</div>
+              <div class="summary__label"><span class="dot dot--red"></span> Off target</div>
+            </div>
+            <div class="summary__cell">
+              <div class="summary__count muted">0</div>
+              <div class="summary__label"><span class="dot dot--unknown"></span> No data</div>
+            </div>
+          </div>
+
+          <div class="grid">
+            <div class="kpi-card">
+              <div class="kpi-card__top">
+                <div><div class="kpi-card__name">Lead Response Rate</div><div class="kpi-card__rule">goal ≥ 90%</div></div>
+                <span class="badge badge--green"><span class="dot dot--green"></span> On target</span>
+              </div>
+              <div><span class="kpi-card__value">94</span><span class="kpi-card__unit">%</span></div>
+              <svg class="spark spark--green" viewBox="0 0 240 40" role="img" aria-label="6-month trend, rising and on target">
+                <line class="goal" x1="0" y1="24" x2="240" y2="24" />
+                <polyline points="6,34 44,31 82,32 120,25 158,20 196,15 234,10" />
+                <circle class="pt" cx="234" cy="10" r="2.6" />
+              </svg>
+              <div class="kpi-card__foot"><span class="cadence">Monthly</span><span>Jun 2026</span></div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-card__top">
+                <div><div class="kpi-card__name">Avg. Response Time</div><div class="kpi-card__rule">goal ≤ 6 min</div></div>
+                <span class="badge badge--yellow"><span class="dot dot--yellow"></span> Watch</span>
+              </div>
+              <div><span class="kpi-card__value">6.4</span><span class="kpi-card__unit">min</span></div>
+              <svg class="spark spark--yellow" viewBox="0 0 240 40" role="img" aria-label="Weekly trend, drifting above goal">
+                <line class="goal" x1="0" y1="26" x2="240" y2="26" />
+                <polyline points="6,30 44,28 82,31 120,29 158,33 196,32 234,35" />
+                <circle class="pt" cx="234" cy="35" r="2.6" />
+              </svg>
+              <div class="kpi-card__foot"><span class="cadence">Weekly</span><span>Wk 26</span></div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-card__top">
+                <div><div class="kpi-card__name">Appointments Booked</div><div class="kpi-card__rule">goal ≥ 200</div></div>
+                <span class="badge badge--red"><span class="dot dot--red"></span> Off target</span>
+              </div>
+              <div><span class="kpi-card__value">151</span></div>
+              <svg class="spark spark--red" viewBox="0 0 240 40" role="img" aria-label="Monthly trend, declining below goal">
+                <line class="goal" x1="0" y1="12" x2="240" y2="12" />
+                <polyline points="6,14 44,17 82,19 120,23 158,27 196,31 234,35" />
+                <circle class="pt" cx="234" cy="35" r="2.6" />
+              </svg>
+              <div class="kpi-card__foot"><span class="cadence">Monthly</span><span>Jun 2026</span></div>
+            </div>
+          </div>
+          <p class="hint" style="margin-top: 14px">
+            Viewers see this same page read-only: no Edit KPIs, no Manage access, no Record value.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 7. CREATE / EDIT VIEW (modal) ============ -->
+    <div class="frame" id="s7">
+      <div class="frame__label"><span class="num">07</span> Create / edit View · pick KPIs you can access</div>
+      <div class="screen">
+        <div class="modal-wrap">
+          <div class="modal" style="width: 540px">
+            <div class="modal__head">
+              <span class="modal__title">New View</span>
+              <span class="muted flex" style="cursor: pointer"><svg class="icon"><use href="#ic-x" /></svg></span>
+            </div>
+            <div class="modal__body">
+              <div class="field">
+                <label>Name</label>
+                <input class="control" value="BDC Scorecard" />
+              </div>
+              <div class="field">
+                <label>Description <span class="tag">(optional)</span></label>
+                <input class="control" value="Response and booking metrics for the BDC leads." />
+              </div>
+              <div class="field" style="margin-bottom: 8px">
+                <label>KPIs in this view <span class="tag">(any KPI you can access)</span></label>
+                <input class="control" placeholder="Search KPIs you own or can see…" style="margin-bottom: 10px" />
+                <div class="picker">
+                  <div class="picker__row">
+                    <span class="checkbox checkbox--on"><svg class="icon icon--sm"><use href="#ic-check" /></svg></span>
+                    <span class="picker__name">Lead Response Rate</span>
+                    <span class="picker__meta">owned · monthly</span>
+                  </div>
+                  <div class="picker__row">
+                    <span class="checkbox checkbox--on"><svg class="icon icon--sm"><use href="#ic-check" /></svg></span>
+                    <span class="picker__name">Avg. Response Time</span>
+                    <span class="picker__meta">owned · weekly</span>
+                  </div>
+                  <div class="picker__row">
+                    <span class="checkbox checkbox--on"><svg class="icon icon--sm"><use href="#ic-check" /></svg></span>
+                    <span class="picker__name">Appointments Booked</span>
+                    <span class="picker__meta">via Exec Weekly · monthly</span>
+                  </div>
+                  <div class="picker__row">
+                    <span class="checkbox"></span>
+                    <span class="picker__name">Show Rate</span>
+                    <span class="picker__meta">owned · monthly</span>
+                  </div>
+                  <div class="picker__row">
+                    <span class="checkbox"></span>
+                    <span class="picker__name">CSI Score</span>
+                    <span class="picker__meta">via Exec Weekly · quarterly</span>
+                  </div>
+                </div>
+                <div class="chips">
+                  <span class="chip-kpi"><svg class="icon icon--sm"><use href="#ic-grip" /></svg> Lead Response Rate <svg class="icon icon--sm"><use href="#ic-x" /></svg></span>
+                  <span class="chip-kpi"><svg class="icon icon--sm"><use href="#ic-grip" /></svg> Avg. Response Time <svg class="icon icon--sm"><use href="#ic-x" /></svg></span>
+                  <span class="chip-kpi"><svg class="icon icon--sm"><use href="#ic-grip" /></svg> Appointments Booked <svg class="icon icon--sm"><use href="#ic-x" /></svg></span>
+                </div>
+                <div class="hint">Drag the handle to reorder. Removing a KPI here only removes it from this view.</div>
+              </div>
+            </div>
+            <div class="modal__foot">
+              <button class="btn btn--ghost">Cancel</button>
+              <button class="btn btn--primary">Save View</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 8. MANAGE ACCESS (modal) ============ -->
+    <div class="frame" id="s8">
+      <div class="frame__label"><span class="num">08</span> Manage access · share a View (binary viewer / owner)</div>
+      <div class="screen">
+        <div class="modal-wrap">
+          <div class="modal">
+            <div class="modal__head">
+              <span class="modal__title">Manage access · BDC Scorecard</span>
+              <span class="muted flex" style="cursor: pointer"><svg class="icon"><use href="#ic-x" /></svg></span>
+            </div>
+            <div class="modal__body">
+              <div class="field" style="margin-bottom: 10px">
+                <label>Invite by email</label>
+                <div style="display: flex; gap: 8px">
+                  <input class="control" placeholder="name@dealershipaccelerator.io" />
+                  <button class="btn btn--primary" style="white-space: nowrap">Add viewer</button>
+                </div>
+                <div class="hint">Added people get read-only access to this view and every KPI in it.</div>
+              </div>
+
+              <div class="subhead" style="margin: 18px 0 0">People with access</div>
+              <div class="member">
+                <span class="avatar">KF</span>
+                <div class="member__who"><b>Kevin Ferguson</b><span>kevin@dealershipaccelerator.io</span></div>
+                <div class="member__right"><span class="access-pill access-pill--owner">Owner</span></div>
+              </div>
+              <div class="member">
+                <span class="avatar">MS</span>
+                <div class="member__who"><b>Maria Sofia</b><span>maria@dealershipaccelerator.io</span></div>
+                <div class="member__right">
+                  <span class="access-pill access-pill--viewer">Viewer</span>
+                  <button class="btn btn--danger btn--sm">Revoke</button>
+                </div>
+              </div>
+              <div class="member">
+                <span class="avatar">SH</span>
+                <div class="member__who"><b>Shane Hetherington</b><span>shane@dealershipaccelerator.io</span></div>
+                <div class="member__right">
+                  <span class="access-pill access-pill--viewer">Viewer</span>
+                  <button class="btn btn--danger btn--sm">Revoke</button>
+                </div>
+              </div>
+              <div class="member">
+                <span class="avatar">TM</span>
+                <div class="member__who"><b>Tim McLeod</b><span>tim@dealershipaccelerator.io</span></div>
+                <div class="member__right">
+                  <span class="access-pill access-pill--viewer">Viewer</span>
+                  <button class="btn btn--danger btn--sm">Revoke</button>
+                </div>
+              </div>
+            </div>
+            <div class="modal__foot">
+              <button class="btn btn--primary">Done</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 9. ARCHIVED ============ -->
+    <div class="frame" id="s9">
+      <div class="frame__label"><span class="num">09</span> Archived · KPIs &amp; Views</div>
+      <div class="screen">
+        <nav class="nav">
+          <div class="lockup">
+            <svg class="lockup__mark"><use href="#da-mark" /></svg>
+            <span class="lockup__word">DAOS</span>
+            <span class="lockup__sub">KPI Tracker</span>
+          </div>
+          <div class="nav__tabs">
+            <span class="tab"><svg width="15" height="15"><use href="#da-mark" /></svg> Dashboard</span>
+            <span class="tab"><svg class="icon icon--sm"><use href="#ic-views" /></svg> Views</span>
+            <span class="tab tab--active">Archived</span>
+          </div>
+          <div class="nav__right"><span class="user-chip"><span class="avatar">KF</span></span></div>
+        </nav>
+        <div class="page">
+          <div class="page__head">
+            <div>
+              <div class="page__title">Archived</div>
+              <div class="page__subtitle">Hidden from the dashboard and views, read-only. Restore to use again. Only owners see their archived items.</div>
+            </div>
+          </div>
+          <div class="subhead">Archived KPIs</div>
+          <div class="panel" style="padding: 8px 20px">
+            <table>
+              <thead>
+                <tr><th>Name</th><th>Goal</th><th>Last value</th><th>Archived</th><th style="text-align: right">Actions</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="value">Old Funnel Conversion</td>
+                  <td>≥ 12%</td>
+                  <td>9%</td>
+                  <td>Apr 12, 2026 · by maria@</td>
+                  <td style="text-align: right"><button class="btn btn--sm">Restore</button> <button class="btn btn--danger btn--sm">Delete</button></td>
+                </tr>
+                <tr>
+                  <td class="value">Trade-in Capture (Q1)</td>
+                  <td>≥ 20</td>
+                  <td>24</td>
+                  <td>Mar 30, 2026 · by kevin@</td>
+                  <td style="text-align: right"><button class="btn btn--sm">Restore</button> <button class="btn btn--danger btn--sm">Delete</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="subhead">Archived Views</div>
+          <div class="panel" style="padding: 8px 20px">
+            <table>
+              <thead>
+                <tr><th>Name</th><th>KPIs</th><th>Archived</th><th style="text-align: right">Actions</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="value">Q1 Launch Tracker</td>
+                  <td>6</td>
+                  <td>Apr 2, 2026 · by kevin@</td>
+                  <td style="text-align: right"><button class="btn btn--sm">Restore</button> <button class="btn btn--danger btn--sm">Delete</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="hint" style="margin-top: 12px">
+            Delete is permanent and admin-only. Restore returns the item with its history and
+            membership intact.
+          </p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
