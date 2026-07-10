@@ -21,3 +21,17 @@ export const createKpiBody = z
   });
 
 export type CreateKpiInput = z.infer<typeof createKpiBody>;
+
+// Request body for updating a KPI. All fields optional; the goal-rule validity of
+// the merged result is checked in the controller (it needs the current values).
+export const updateKpiBody = z.object({
+  name: z.string().trim().min(1).max(200).optional(),
+  description: z.string().trim().max(1000).nullable().optional(),
+  unit: z.enum(['NUMBER', 'PERCENT', 'DOLLARS']).optional(),
+  comparator: z.enum(['EQ', 'GT', 'GTE', 'LT', 'LTE', 'BETWEEN']).optional(),
+  goal: z.number().finite().optional(),
+  goalUpper: z.number().finite().nullable().optional(),
+  cadence: z.enum(['WEEKLY', 'MONTHLY', 'QUARTERLY']).optional(),
+});
+
+export type UpdateKpiInput = z.infer<typeof updateKpiBody>;

@@ -1,4 +1,4 @@
-import type { Kpi, PrismaClient } from '@prisma/client';
+import type { Cadence, Comparator, Kpi, PrismaClient, Unit } from '@prisma/client';
 import type { CreateKpiInput } from '../schemas/kpi.schema';
 
 export function createKpi(
@@ -36,4 +36,30 @@ export function listActiveKpisForUser(
 
 export function findKpiById(prisma: PrismaClient, id: string): Promise<Kpi | null> {
   return prisma.kpi.findUnique({ where: { id } });
+}
+
+export interface KpiUpdateFields {
+  name?: string;
+  description?: string | null;
+  unit?: Unit;
+  comparator?: Comparator;
+  goal?: number;
+  goalUpper?: number | null;
+  cadence?: Cadence;
+}
+
+export function updateKpi(prisma: PrismaClient, id: string, data: KpiUpdateFields): Promise<Kpi> {
+  return prisma.kpi.update({ where: { id }, data });
+}
+
+export function setArchived(
+  prisma: PrismaClient,
+  id: string,
+  archivedAt: Date | null,
+): Promise<Kpi> {
+  return prisma.kpi.update({ where: { id }, data: { archivedAt } });
+}
+
+export function deleteKpi(prisma: PrismaClient, id: string): Promise<Kpi> {
+  return prisma.kpi.delete({ where: { id } });
 }
