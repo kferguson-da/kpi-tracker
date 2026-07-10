@@ -4,15 +4,16 @@
   "private": true,
   "description": "Internal KPI tracker: CRUD KPIs, Views, and access to Views.",
   "scripts": {
-    "dev": "npm --prefix server run dev",
-    "build": "npm --prefix server run build",
-    "test": "npm --prefix server test",
-    "lint": "npm --prefix server run lint",
-    "typecheck": "npm --prefix server run typecheck",
+    "dev": "concurrently -n api,web -c blue,green \"npm --prefix server run dev\" \"npm --prefix client run dev\"",
+    "build": "npm --prefix server run build && npm --prefix client run build",
+    "test": "npm --prefix server test && npm --prefix client test",
+    "lint": "npm --prefix server run lint && npm --prefix client run lint",
+    "typecheck": "npm --prefix server run typecheck && npm --prefix client run typecheck",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
   "devDependencies": {
+    "concurrently": "^9.1.2",
     "prettier": "^3.4.2"
   }
 }
