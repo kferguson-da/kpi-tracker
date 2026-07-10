@@ -7,6 +7,7 @@ import { authenticate, requireUser } from './plugins/auth';
 import { healthRoutes } from './routes/health.routes';
 import { meRoutes } from './routes/me.routes';
 import { kpisRoutes } from './routes/kpis.routes';
+import { viewsRoutes } from './routes/views.routes';
 import { HttpError } from './utils/httpError';
 import './types';
 
@@ -57,6 +58,7 @@ export async function buildApp(opts: BuildAppOptions = {}): Promise<FastifyInsta
       instance.addHook('preHandler', requireUser);
       await instance.register(meRoutes);
       await instance.register(kpisRoutes);
+      await instance.register(viewsRoutes);
     },
     { prefix: '/api' },
   );
